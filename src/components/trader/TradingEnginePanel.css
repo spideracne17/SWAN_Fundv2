@@ -1,0 +1,464 @@
+/* ─── Trading Engine Panel ──────────────────────────────────────────────── */
+
+.engine-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.engine-loading, .engine-error {
+  color: var(--color-text-muted);
+  font-style: italic;
+  padding: 16px 0;
+}
+
+/* ─── Signal Banner ─── */
+.engine-signal {
+  border-radius: 8px;
+  padding: 16px 24px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+}
+.engine-signal--go { background: rgba(102,187,106,0.08); border: 1px solid rgba(102,187,106,0.4); }
+.engine-signal--caution { background: rgba(255,202,40,0.08); border: 1px solid rgba(255,202,40,0.4); }
+.engine-signal--no_trade { background: rgba(239,83,80,0.08); border: 1px solid rgba(239,83,80,0.4); }
+
+.engine-signal-level { font-size: 1.5rem; font-weight: 800; letter-spacing: 1px; }
+.engine-signal--go .engine-signal-level { color: #66bb6a; }
+.engine-signal--caution .engine-signal-level { color: #ffca28; }
+.engine-signal--no_trade .engine-signal-level { color: #ef5350; }
+
+.engine-signal-sizing { font-size: 0.875rem; color: var(--color-text-muted); }
+.engine-signal-sizing strong { color: var(--color-text); font-size: 1rem; }
+
+.engine-signal-reasons { flex-basis: 100%; display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.engine-reason { font-size: 0.6875rem; background: rgba(255,255,255,0.04); padding: 3px 8px; border-radius: 4px; color: var(--color-text-muted); }
+
+/* ─── Grid ─── */
+.engine-grid {
+  display: grid;
+  grid-template-columns: 1fr 2fr 1fr 1fr;
+  gap: 16px;
+}
+
+.engine-card {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 16px 20px;
+}
+.engine-card--wide { grid-column: span 1; }
+.engine-card h4 {
+  margin: 0 0 10px;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.engine-metric { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
+.engine-metric-label { font-size: 0.6875rem; color: var(--color-text-muted); }
+.engine-metric-value { font-size: 1.25rem; font-weight: 700; font-family: 'Fira Code','Cascadia Code',monospace; }
+
+.engine-badge {
+  display: inline-block; padding: 2px 8px; border-radius: 4px;
+  font-size: 0.625rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px;
+  margin-bottom: 6px;
+}
+.engine-desc { font-size: 0.625rem; color: var(--color-text-muted); margin: 4px 0 0; }
+.engine-warn { color: #ef5350; }
+
+/* Range rows */
+.engine-range-row {
+  display: flex; justify-content: space-between; font-size: 0.6875rem;
+  color: var(--color-text-muted); padding: 3px 0; border-bottom: 1px solid var(--color-border);
+}
+.engine-range-row:last-of-type { border-bottom: none; }
+.engine-range-row span:last-child { font-family: 'Fira Code','Cascadia Code',monospace; color: var(--color-text); font-weight: 500; }
+
+/* ─── Correction + Strikes ─── */
+.engine-correction-header { display: flex; gap: 16px; margin-bottom: 12px; }
+.engine-spx-stack { display: flex; flex-direction: column; gap: 4px; min-width: 140px; }
+.engine-spx-row { display: flex; justify-content: space-between; font-size: 0.6875rem; padding: 4px 8px; border-radius: 4px; }
+.engine-spx-row--current { background: rgba(79,195,247,0.08); }
+.engine-spx-price { font-family: 'Fira Code','Cascadia Code',monospace; font-weight: 600; color: var(--color-text); }
+.engine-spx-price--current { color: #4fc3f7; font-size: 0.8125rem; }
+.engine-correction-badge { display: flex; flex-direction: column; gap: 4px; }
+.engine-correction-pct { font-size: 0.75rem; font-weight: 600; }
+
+.engine-strike-table { width: 100%; border-collapse: collapse; font-size: 0.6875rem; }
+.engine-strike-table th { text-align: left; padding: 4px 8px; color: var(--color-text-muted); font-weight: 600; border-bottom: 1px solid var(--color-border); font-size: 0.625rem; text-transform: uppercase; }
+.engine-strike-table td { padding: 4px 8px; border-bottom: 1px solid var(--color-border); color: var(--color-text); font-family: 'Fira Code','Cascadia Code',monospace; }
+.engine-strike-table tr:last-child td { border-bottom: none; }
+
+/* ─── Trend / MA rows ─── */
+.engine-ma-rows { display: flex; flex-direction: column; gap: 0; margin-top: 8px; }
+.engine-ma-row { display: flex; justify-content: space-between; font-size: 0.6875rem; padding: 4px 0; border-bottom: 1px solid var(--color-border); color: var(--color-text-muted); }
+.engine-ma-row:last-child { border-bottom: none; }
+.engine-ma-val { font-family: 'Fira Code','Cascadia Code',monospace; font-weight: 600; color: var(--color-text); }
+
+/* ─── Circuit Breakers ─── */
+.engine-breakers { background-color: var(--color-surface); border: 1px solid var(--color-border); border-radius: 8px; padding: 14px 20px; }
+.engine-breakers--active { border-color: rgba(239,83,80,0.5); background: rgba(239,83,80,0.03); }
+.engine-breakers h4 { margin: 0 0 6px; font-size: 0.75rem; font-weight: 600; }
+.engine-breaker-status { font-size: 0.8125rem; font-weight: 700; }
+.engine-triggers { list-style: none; padding: 0; margin: 6px 0 0; }
+.engine-triggers li { font-size: 0.6875rem; color: #ef5350; padding: 2px 0; }
+.engine-triggers li::before { content: '⚠ '; }
+
+/* ─── Entry Checklist ─── */
+.engine-checklist { background-color: var(--color-surface); border: 1px solid var(--color-border); border-radius: 8px; padding: 14px 20px; }
+.engine-checklist h4 { margin: 0 0 10px; font-size: 0.75rem; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+.engine-checklist-count { font-size: 0.6875rem; padding: 2px 8px; border-radius: 4px; background: rgba(255,202,40,0.15); color: #ffca28; }
+.engine-checklist-count--all { background: rgba(102,187,106,0.15); color: #66bb6a; }
+.engine-checklist-items { display: flex; flex-direction: column; gap: 4px; }
+.engine-check-item { display: grid; grid-template-columns: 18px 1fr 2fr; gap: 6px; align-items: center; padding: 5px 8px; border-radius: 4px; font-size: 0.6875rem; }
+.engine-check-item--pass { background: rgba(102,187,106,0.03); }
+.engine-check-item--fail { background: rgba(239,83,80,0.03); }
+.engine-check-icon { font-weight: 700; font-size: 0.75rem; }
+.engine-check-item--pass .engine-check-icon { color: #66bb6a; }
+.engine-check-item--fail .engine-check-icon { color: #ef5350; }
+.engine-check-label { font-weight: 600; color: var(--color-text); }
+.engine-check-detail { color: var(--color-text-muted); font-size: 0.625rem; }
+
+/* ─── Capital Efficiency ─── */
+.engine-efficiency-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.engine-eff-item { display: flex; flex-direction: column; gap: 2px; padding: 10px; background: var(--color-bg); border-radius: 6px; border: 1px solid var(--color-border); }
+.engine-eff-label { font-size: 0.625rem; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.3px; }
+.engine-eff-value { font-size: 0.9375rem; font-weight: 700; font-family: 'Fira Code','Cascadia Code',monospace; color: var(--color-text); }
+.engine-eff-value--green { color: #66bb6a; }
+
+/* ─── Monthly P&L Vertical Bar Chart (grouped by month) ─── */
+.engine-vbar-legend { display: flex; gap: 12px; margin-bottom: 10px; }
+.engine-vbar-legend-item { display: flex; align-items: center; gap: 4px; font-size: 0.625rem; color: var(--color-text-muted); }
+.engine-vbar-legend-swatch { width: 10px; height: 10px; border-radius: 2px; }
+
+.engine-vbar-chart { overflow-x: auto; padding: 4px 0; }
+.engine-vbar-bars { display: flex; gap: 8px; align-items: stretch; height: 260px; position: relative; border-bottom: 1px solid var(--color-border); }
+.engine-vbar-bars::before { content: ''; position: absolute; top: 50%; left: 0; right: 0; height: 1px; background: var(--color-border); z-index: 0; }
+.engine-vbar-group { display: flex; flex-direction: column; align-items: center; flex: 1; min-width: 50px; position: relative; z-index: 1; }
+.engine-vbar-group-bars { display: flex; gap: 2px; flex: 1; width: 100%; justify-content: center; }
+.engine-vbar-col { display: flex; flex-direction: column; align-items: center; width: 14px; position: relative; }
+.engine-vbar-spacer { width: 14px; }
+.engine-vbar-container { display: flex; flex-direction: column; flex: 1; width: 100%; }
+.engine-vbar-top { display: flex; flex-direction: column; justify-content: flex-end; align-items: center; flex: 1; }
+.engine-vbar-bottom { display: flex; flex-direction: column; justify-content: flex-start; align-items: center; flex: 1; }
+.engine-vbar-fill { width: 12px; border-radius: 2px; min-height: 2px; transition: height 0.3s ease; }
+.engine-vbar-fill--neg { opacity: 0.7; }
+.engine-vbar-month { font-size: 0.625rem; color: var(--color-text-muted); margin-top: 6px; line-height: 1; font-weight: 600; }
+.engine-vbar-amount { font-size: 0.5rem; font-family: 'Fira Code','Cascadia Code',monospace; font-weight: 600; white-space: nowrap; line-height: 1; padding: 1px 0; }
+.engine-vbar-amount--pos { color: #66bb6a; }
+.engine-vbar-amount--neg { color: #ef5350; }
+
+/* Monthly data table */
+.engine-monthly-table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 0.6875rem; font-family: 'Fira Code','Cascadia Code',monospace; }
+.engine-monthly-table th { padding: 4px 6px; color: var(--color-text-muted); font-weight: 600; font-size: 0.5625rem; text-align: center; border-bottom: 1px solid var(--color-border); }
+.engine-monthly-table td { padding: 4px 6px; text-align: center; border-bottom: 1px solid var(--color-border); }
+.engine-monthly-table tr:last-child td { border-bottom: none; }
+.engine-monthly-year { font-weight: 700; text-align: left !important; }
+.engine-monthly-pos { color: #66bb6a; }
+.engine-monthly-neg { color: #ef5350; }
+.engine-monthly-total { font-weight: 700; }
+
+/* ─── Responsive ─── */
+@media (max-width: 1100px) {
+  .engine-grid { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 700px) {
+  .engine-grid { grid-template-columns: 1fr; }
+  .engine-efficiency-grid { grid-template-columns: repeat(2, 1fr); }
+  .engine-check-item { grid-template-columns: 18px 1fr; }
+  .engine-check-detail { grid-column: 2; }
+}
+
+/* ─── Market Condition Banner (Spec Section 2) ─── */
+.engine-condition {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 24px;
+  border-radius: 8px;
+  border: 2px solid;
+  background: var(--color-surface);
+}
+.engine-condition-indicator {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.engine-condition-info {
+  flex: 1;
+}
+.engine-condition-level {
+  font-size: 1.5rem;
+  font-weight: 900;
+  letter-spacing: 2px;
+}
+.engine-condition-meaning {
+  font-size: 0.8125rem;
+  color: var(--color-text-muted);
+  margin-top: 2px;
+}
+.engine-condition-sizing {
+  font-size: 0.6875rem;
+  color: var(--color-text-muted);
+  margin-top: 4px;
+  font-weight: 600;
+}
+.engine-vix-pattern {
+  text-align: right;
+  min-width: 160px;
+}
+.engine-vix-pattern-num {
+  font-size: 1.125rem;
+  font-weight: 800;
+}
+.engine-vix-pattern-label {
+  font-size: 0.6875rem;
+  color: var(--color-text-muted);
+  margin-top: 2px;
+}
+.engine-vix-pattern-signal {
+  font-size: 0.75rem;
+  font-weight: 700;
+  margin-top: 4px;
+}
+
+/* ─── Position Alerts (Spec Section 11.3) ─── */
+.engine-alerts {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 14px 20px;
+}
+.engine-alerts h4 {
+  margin: 0 0 10px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+}
+.engine-alerts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.engine-alert {
+  padding: 10px 14px;
+  border-radius: 6px;
+  border-left: 3px solid;
+}
+.engine-alert--critical {
+  background: rgba(239, 83, 80, 0.06);
+  border-left-color: #ef5350;
+}
+.engine-alert--danger {
+  background: rgba(255, 68, 68, 0.06);
+  border-left-color: #FF4444;
+}
+.engine-alert--warning {
+  background: rgba(255, 184, 0, 0.06);
+  border-left-color: #FFB800;
+}
+.engine-alert--info {
+  background: rgba(102, 187, 106, 0.06);
+  border-left-color: #66bb6a;
+}
+.engine-alert-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.engine-alert-severity {
+  font-size: 0.5625rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  padding: 1px 6px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.06);
+}
+.engine-alert--critical .engine-alert-severity { color: #ef5350; }
+.engine-alert--danger .engine-alert-severity { color: #FF4444; }
+.engine-alert--warning .engine-alert-severity { color: #FFB800; }
+.engine-alert--info .engine-alert-severity { color: #66bb6a; }
+.engine-alert-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+.engine-alert-position {
+  font-size: 0.625rem;
+  color: var(--color-text-muted);
+  font-family: 'Fira Code', 'Cascadia Code', monospace;
+}
+.engine-alert-message {
+  font-size: 0.6875rem;
+  color: var(--color-text-muted);
+  margin-top: 4px;
+}
+.engine-alert-action {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  margin-top: 4px;
+}
+
+/* ─── DTE Ladder (Spec Section 5 / 11.5) ─── */
+.engine-dte-ladder h4 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.engine-dte-fill-order {
+  font-size: 0.5625rem;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  background: rgba(255, 255, 255, 0.04);
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+.engine-dte-rungs {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.engine-dte-rung {
+  padding: 10px 14px;
+  border-radius: 6px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg);
+}
+.engine-dte-rung--available {
+  border-color: rgba(102, 187, 106, 0.3);
+}
+.engine-dte-rung--disabled {
+  opacity: 0.5;
+  border-color: rgba(239, 83, 80, 0.3);
+}
+.engine-dte-rung--occupied {
+  border-color: rgba(79, 195, 247, 0.4);
+  background: rgba(79, 195, 247, 0.03);
+}
+.engine-dte-rung-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.engine-dte-priority {
+  font-size: 0.625rem;
+  font-weight: 800;
+  color: #4fc3f7;
+  background: rgba(79, 195, 247, 0.1);
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+.engine-dte-label {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+.engine-dte-theta {
+  font-size: 0.5625rem;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 3px;
+  text-transform: uppercase;
+}
+.engine-dte-theta--fast {
+  background: rgba(102, 187, 106, 0.12);
+  color: #66bb6a;
+}
+.engine-dte-theta--medium {
+  background: rgba(255, 202, 40, 0.12);
+  color: #ffca28;
+}
+.engine-dte-theta--slow {
+  background: rgba(158, 158, 158, 0.12);
+  color: #9e9e9e;
+}
+.engine-dte-occupied-badge {
+  font-size: 0.5625rem;
+  font-weight: 700;
+  color: #4fc3f7;
+  margin-left: auto;
+}
+.engine-dte-disabled-badge {
+  font-size: 0.5625rem;
+  font-weight: 700;
+  color: #ef5350;
+  margin-left: auto;
+}
+.engine-dte-rung-details {
+  display: flex;
+  gap: 16px;
+  margin-top: 4px;
+  font-size: 0.625rem;
+  color: var(--color-text-muted);
+}
+.engine-dte-range {
+  font-family: 'Fira Code', 'Cascadia Code', monospace;
+}
+.engine-dte-disabled-reason {
+  font-size: 0.5625rem;
+  color: #ef5350;
+  margin-top: 4px;
+  font-style: italic;
+}
+
+/* ─── 7 Non-Negotiable Rules (Spec Section 10) ─── */
+.engine-rules {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 14px 20px;
+}
+.engine-rules h4 {
+  margin: 0 0 10px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+}
+.engine-rules-list {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 4px;
+}
+.engine-rule {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 5px 8px;
+  border-radius: 4px;
+  font-size: 0.6875rem;
+  color: var(--color-text);
+  background: rgba(255, 255, 255, 0.02);
+}
+.engine-rule-num {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: rgba(239, 83, 80, 0.12);
+  color: #ef5350;
+  font-size: 0.625rem;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+@media (max-width: 700px) {
+  .engine-condition {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .engine-vix-pattern {
+    text-align: left;
+  }
+}

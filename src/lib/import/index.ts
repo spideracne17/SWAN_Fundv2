@@ -1,0 +1,15 @@
+export { detectBrokerFormat, FormatDetectionError } from './formatDetection';
+export { parseFile } from './fileParser';
+export type { ParseFileResult } from './fileParser';
+export { normalizeDate, DateNormalizationError, parseAmount, AmountParseError, mapActionToType, UnknownActionError, normalizeRecords } from './normalization';
+export type { TransactionType, NormalizedRecord } from './normalization';
+export { computeRecordHash, computeFileHash, checkFileAlreadyImported, validateAndDeduplicate } from './deduplication';
+export type { HashableRecord, ValidationResult, FileImportCheckResult } from './deduplication';
+export { detectStockSplit } from './splitDetection';
+export type { StockSplitEvent } from './splitDetection';
+export { pairDripRecords } from './dripPairing';
+export type { DripPair, PairedResult } from './dripPairing';
+export { importRecords } from './importRecords';
+export type { ImportSummary, ImportOptions } from './importRecords';
+export { generateBackup } from './backup';
+export type { BackupPayload } from './backup';

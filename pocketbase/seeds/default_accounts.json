@@ -1,0 +1,38 @@
+[
+  {
+    "name": "Schwab Taxable #1",
+    "broker": "schwab",
+    "account_type": "taxable",
+    "account_number_last4": "0001",
+    "tax_status": "taxable",
+    "is_active": true,
+    "default_lot_method": "fifo"
+  },
+  {
+    "name": "Schwab Taxable #2",
+    "broker": "schwab",
+    "account_type": "taxable",
+    "account_number_last4": "0002",
+    "tax_status": "taxable",
+    "is_active": true,
+    "default_lot_method": "fifo"
+  },
+  {
+    "name": "Schwab Roth IRA",
+    "broker": "schwab",
+    "account_type": "roth_ira",
+    "account_number_last4": "0003",
+    "tax_status": "tax_free",
+    "is_active": true,
+    "default_lot_method": "fifo"
+  },
+  {
+    "name": "Robinhood Traditional IRA",
+    "broker": "robinhood",
+    "account_type": "traditional_ira",
+    "account_number_last4": "0004",
+    "tax_status": "tax_deferred",
+    "is_active": true,
+    "default_lot_method": "fifo"
+  }
+]

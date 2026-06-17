@@ -1,0 +1,48 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# PocketBase binary and data (local dev only)
+pocketbase/server/pocketbase.exe
+pocketbase/server/pb_data/
+pocketbase/server/pb_migrations/
+
+# PocketBase zip download
+pocketbase_*.zip
+
+# Large binary files that shouldn't be in repo
+*.exe
+*.csv
+*.json.bak
+investment_backup_*.json
+investment_workbook_spec_*.docx
+tsc_output.txt
+
+# Spreadsheet files (brokerage exports)
+*.xlsx

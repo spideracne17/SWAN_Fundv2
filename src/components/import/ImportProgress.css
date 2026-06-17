@@ -1,0 +1,121 @@
+.import-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 24px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background-color: var(--color-surface);
+  margin-top: 16px;
+}
+
+.import-progress__title {
+  margin: 0 0 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.import-progress__stages {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.import-progress__stage {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background-color: transparent;
+  transition: background-color 0.2s ease;
+}
+
+.import-progress__stage--active {
+  background-color: var(--color-active-bg);
+}
+
+.import-progress__stage--complete {
+  opacity: 0.85;
+}
+
+.import-progress__stage--pending {
+  opacity: 0.5;
+}
+
+.import-progress__stage-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+/* Spinner animation for active stage */
+.import-progress__spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--color-border);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: import-spin 0.8s linear infinite;
+}
+
+@keyframes import-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Checkmark for complete stage */
+.import-progress__checkmark {
+  color: #66bb6a;
+  font-size: 1.125rem;
+  line-height: 1;
+}
+
+/* Pending dot */
+.import-progress__pending-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: var(--color-border);
+}
+
+.import-progress__stage-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.import-progress__stage--pending .import-progress__stage-label {
+  color: var(--color-text-muted);
+}
+
+.import-progress__stage--active .import-progress__stage-label {
+  color: var(--color-primary);
+}
+
+/* Error state */
+.import-progress--error .import-progress__stage--active {
+  background-color: rgba(239, 83, 80, 0.08);
+}
+
+.import-progress__error-icon {
+  color: #ef5350;
+  font-size: 1.125rem;
+  line-height: 1;
+}
+
+.import-progress__error-message {
+  margin: 8px 0 0;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background-color: rgba(239, 83, 80, 0.08);
+  border: 1px solid rgba(239, 83, 80, 0.25);
+  color: #ef5350;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}

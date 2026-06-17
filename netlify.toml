@@ -1,0 +1,19 @@
+# Netlify deployment configuration for Investment Workbook
+# React SPA built with Vite, deployed to Netlify free tier
+
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+# Required environment variables (set in Netlify UI > Site Settings > Environment Variables):
+# - VITE_POCKETBASE_URL: Production PocketBase API URL (e.g., https://your-app.pockethost.io)
+#   This variable is embedded at build time by Vite and used for all API calls.
+
+[build.environment]
+  NODE_VERSION = "20"
+
+# SPA catch-all redirect: serve index.html for all routes (client-side routing)
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

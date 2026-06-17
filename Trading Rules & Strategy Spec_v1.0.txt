@@ -1,0 +1,397 @@
+# SPX Put Credit Spread — Trading Rules & Strategy Spec
+**Version 1.0**
+**For use with React/Netlify/PocketBase webapp**
+
+---
+
+## 1. Overview
+
+This document defines the complete rules for a systematic SPX put credit spread strategy. The goal is a rules-based system that removes emotion from every decision — entry, management, and exit. Follow the rules as written.
+
+The strategy sells put credit spreads on the S&P 500 index (SPX), collecting premium when the market stays above the short strike. SPX options are Section 1256 contracts (60% long-term / 40% short-term tax treatment regardless of holding period).
+
+---
+
+## 2. Market Condition System (VIX-Based)
+
+The market condition is determined by the current VIX level. It controls whether new trades are allowed and how existing positions are managed. Check this before every session.
+
+### 2.1 Condition Definitions
+
+| Condition | VIX Level | Color | Meaning |
+|---|---|---|---|
+| Green | Below 20 | `#00C087` | Normal operations |
+| Yellow | 20–25 | `#FFB800` | Caution — reduced activity |
+| Red | 25–35 | `#FF4444` | Stop — no new trades |
+| Black | Above 35 | `#1A1A1A` | Emergency — close everything |
+
+### 2.2 Rules Per Condition
+
+**Green (VIX < 20)**
+- New trades: yes, normal size
+- Existing positions: hold, close at 50% profit or 21 DTE
+- Strike selection: 10–20 delta, standard parameters
+- DTE: full ladder available (see Section 5)
+
+**Yellow (VIX 20–25)**
+- New trades: yes, half size only
+- VIX must be above its 20-day average — not just above 20
+- Strike selection: drop to 8–12 delta, wider spread width
+- DTE: 90 DTE and 120 DTE only — do not use 60–70 DTE in Yellow
+- Existing positions: monitor delta daily, roll if short delta exceeds 0.20
+
+**Red (VIX 25–35)**
+- New trades: none
+- Existing positions: apply recovery rules from Section 6
+- Do not enter anything until VIX returns below 25
+
+**Black (VIX > 35)**
+- New trades: none
+- Existing positions: close everything immediately
+- No analysis required — capital preservation overrides all other rules
+- Return to trading only when VIX is below 25 and fading
+
+---
+
+## 3. VIX Trend Check
+
+Run this check before every new entry. The condition (Section 2) tells you whether you can trade. The trend check tells you whether the setup is good.
+
+### 3.1 Four VIX Trend Patterns
+
+**Pattern 1 — VIX spiking above its 20-day average**
+Signal: Enter now
+Reasoning: Premiums are elevated. The market has already fallen. Your 10% strike cushion starts from a lower, stressed base. This is the optimal entry window.
+
+**Pattern 2 — VIX spiked and now fading (rolling over)**
+Signal: Enter now
+Reasoning: Peak fear has passed, direction is turning. Premiums still elevated. Best risk/reward entry of the four patterns.
+
+**Pattern 3 — VIX elevated 3+ consecutive weeks without fading**
+Signal: Wait — do not enter
+Reasoning: This is a trending bear market pattern, not a normal correction. The drop may continue. Wait for VIX to show a clear fading signal (declining 3+ consecutive days from a recent peak) before entering.
+
+**Pattern 4 — VIX low / below 20-day average / market near highs**
+Signal: Skip this setup
+Reasoning: You are selling cheap options with no head start. Premiums are thin. There is no cushion from a prior drop. The market has nowhere to fall before testing your strikes. Wait for a pullback.
+
+### 3.2 How to Determine the Pattern
+
+The 20-day VIX average is the key reference. Compare current VIX to the average:
+- Current VIX > 20-day average AND rising → Pattern 1
+- Current VIX > 20-day average AND falling → Pattern 2
+- Current VIX > 20-day average AND flat for 3+ weeks → Pattern 3
+- Current VIX ≤ 20-day average → Pattern 4
+
+The webapp should display this automatically. The 20-day VIX average can be pulled via GOOGLEFINANCE or a market data API and compared to the current VIX level.
+
+---
+
+## 4. Entry Rules
+
+### 4.1 When to Enter
+
+Enter new spreads only when all of the following are true:
+1. Market condition is Green or Yellow
+2. VIX trend pattern is Pattern 1 or Pattern 2 (spiking or fading)
+3. You have available spread slots (see Section 7 — capacity)
+4. The market has already pulled back — you are not entering at or near highs
+
+The core principle: enter when the market is down and VIX is elevated. Resist entering when the market is calm and rising.
+
+### 4.2 Strike Selection
+
+- Short strike delta: 10–20 (Green condition), 8–12 (Yellow condition)
+- Target delta: 15 (center of range in normal conditions)
+- Strike placement: approximately 10% below current SPX price
+- Spread width: 5 points (e.g. sell 5500 put, buy 5495 put)
+- Multiplier: 100 (one contract = $500 max risk on a 5-point spread)
+
+### 4.3 Entry Trigger — The Dip Entry Model
+
+When SPX drops, VIX spikes. This simultaneous effect works in your favor:
+- Elevated VIX means higher implied volatility — premiums you collect are 2–3x larger than in calm markets
+- The market is already lower — your 10% cushion starts from a stressed base, meaning the market must fall further from an already-stressed level to reach your strikes
+
+Historical SPX pullback context for calibrating entries:
+
+| Window | Typical pullback | Severe but recoverable |
+|---|---|---|
+| 1 week | 1–3% | 5–7% |
+| 1 month | 3–6% | 8–12% |
+| 2 months | 5–10% | 12–18% |
+| 3 months | 5–12% | 15–22% |
+
+A 10% strike cushion covers the typical pullback range for 90–120 day trades and the majority of severe-but-recoverable pullbacks. Crisis-level drops (30%+) are handled by the Black condition emergency stop.
+
+---
+
+## 5. DTE Ladder
+
+Rather than entering all positions at one expiry, spread entries across multiple expirations. This is the DTE ladder. On each dip entry, fill rungs in priority order based on available slots.
+
+### 5.1 Ladder Rungs
+
+**Priority 1 — 90 DTE**
+- Enter first on every dip entry, no exceptions
+- Best balance of premium collected and time buffer
+- Theta burns meaningfully within 3–4 weeks of entry
+- Close rule: 50% profit or 21 DTE
+
+**Priority 2 — 120 DTE**
+- Enter second if slots remain
+- Slower early theta but maximum buffer if recovery takes longer
+- Best rung when you believe recovery will be moderate-paced
+- Close rule: 50% profit or 21 DTE
+
+**Priority 3 — 60–70 DTE**
+- Enter third, only if VIX is genuinely above 20
+- Fastest theta burn — premium collects quickly once market stabilizes
+- Do NOT use this rung in Yellow condition — insufficient time buffer if wrong
+- Close rule: 50% profit or 21 DTE
+
+**Priority 4 — 140–150 DTE**
+- Use sparingly
+- Reserve for situations where recovery may be delayed: Fed uncertainty, sustained earnings pressure, slow grinding bear market
+- Ties up buying power the longest
+- Close rule: 50% profit or 21 DTE
+
+### 5.2 Ladder Slot Allocation by Available Slots
+
+| Slots Available | Fill Order |
+|---|---|
+| 1 slot | 90 DTE only |
+| 2 slots | 90 DTE, 120 DTE |
+| 3 slots | 90 DTE, 120 DTE, 60–70 DTE |
+| 4+ slots | All four rungs |
+
+In Yellow condition: skip the 60–70 DTE rung regardless of available slots.
+
+---
+
+## 6. Position Management — Hold, Roll, or Close
+
+When SPX drops and tests your short strike, follow this table exactly. There is one answer per situation — do not deliberate.
+
+### 6.1 Recovery Time Reference
+
+| Drop Size | Typical recovery | Severe case |
+|---|---|---|
+| 3–6% | 1–3 weeks | 6 weeks |
+| 6–10% | 2–6 weeks | 3 months |
+| 10–15% | 4–12 weeks | 6 months |
+| Over 15% | 3–6 months | 1–2 years |
+
+### 6.2 Decision Table
+
+| DTE Remaining | Drop Size | VIX Condition | Decision | Action |
+|---|---|---|---|---|
+| Any | Any | Black (VIX > 35) | CLOSE NOW | Close all spreads immediately. Regime change. |
+| Under 21 | Any | Any | CLOSE | Take the defined loss. Time has run out. No exceptions. |
+| 21–45 | Under 10% | Green/Yellow | HOLD | Typical pullback with time remaining. Monitor delta daily. |
+| 21–45 | 10–15% | Green/Yellow | ROLL | Buy back spread, sell new one 4–6 weeks further out at a lower strike. |
+| 21–45 | Over 15% | Any | CLOSE | Too far down with too little time. Close for defined loss. |
+| 45–60 | Under 15% | Green/Yellow | HOLD | Severe-but-recoverable drop with sufficient time remaining. |
+| 60+ | Under 15% | Green/Yellow | HOLD | Ample time buffer. Normal and severe corrections recover within this window. |
+| Any | Over 15% in under 4 weeks | Any | CLOSE NOW | Panic crash pattern. Close regardless of DTE. |
+| Any | Any | VIX elevated 3+ weeks | DO NOT ADD | Bear trend signal. No new spreads. |
+
+### 6.3 Rolling Rules
+
+When rolling a position:
+- Buy back the entire existing spread (both legs) in one order
+- Sell the new spread at a lower strike, same 5-point width
+- Target new expiry 4–6 weeks further out than the original
+- Collect net credit if possible — do not roll for a debit unless the alternative is a larger loss
+- Only roll once per position — if the rolled position also gets tested, close it
+
+### 6.4 Delta Monitoring
+
+Check the short strike delta daily when a position is within 30 days of expiry or when SPX has dropped more than 5% from entry.
+
+- Short delta above 0.20 in Green → monitor closely, consider rolling
+- Short delta above 0.20 in Yellow → roll immediately
+- Short delta above 0.30 in any condition → close or roll immediately
+
+---
+
+## 7. Trade Capacity
+
+### 7.1 Slot System
+
+Maximum simultaneous spread positions: 10 slots
+Cash reserved per slot: $500 (covers margin/buying power per 5-point spread)
+Maximum allocation to any single underlying: 30% of slots (3 of 10)
+
+### 7.2 Slot Count
+
+Each spread (one short leg + one long leg) = 1 slot. A full DTE ladder entry (4 spreads) = 4 slots.
+
+### 7.3 Event Buffer
+
+Avoid opening new positions within 3 days of scheduled high-impact events: FOMC meetings, CPI releases, Non-Farm Payrolls. These events cause sharp short-term VIX moves that can immediately test new entries.
+
+---
+
+## 8. Exit Rules
+
+### 8.1 Profit Target
+
+Close any position when it has reached 50% of maximum profit. Example: if you collected $3.00 credit on a 5-point spread, close when the spread can be bought back for $1.50 or less.
+
+Do not hold for more. The remaining credit is not worth the gamma risk.
+
+### 8.2 Time Stop
+
+Close any position at 21 DTE regardless of profit/loss status. If you have not reached the 50% profit target by 21 DTE, close anyway.
+
+Inside 21 days, short gamma accelerates against you. Holding through expiry for the remaining premium is a negative expected-value decision.
+
+### 8.3 Loss Limit
+
+Maximum loss on any single spread: the spread width minus premium received. On a 5-point spread with $3.00 credit collected, max loss = $500 − $300 = $200 per contract.
+
+There is no stop-loss trigger — the defined risk of the spread structure IS the stop loss. The buying power to cover max loss must be reserved before entry (the $500 per slot rule handles this).
+
+---
+
+## 9. Bearish Market Strategies
+
+When conditions turn bearish and put credit spreads are not appropriate, two alternative structures can be used.
+
+### 9.1 Bear Call Spread
+
+Used when: market condition is Yellow or the market has just turned down and you want to express a bearish/neutral view.
+
+Structure:
+- Sell a call at a strike above current SPX price
+- Buy a call at a higher strike (same expiry, same 5-point width)
+- Collect net credit
+- Profit if SPX stays below your short call strike
+
+Example with SPX at 5,500:
+- Sell 5,650 call at $6.00
+- Buy 5,700 call at $4.00
+- Net credit: $200 per contract
+- Wins if SPX stays below 5,650
+
+Delta targeting: 10–15 delta on the short call strike. DTE: same ladder rules apply.
+
+### 9.2 Iron Condor
+
+Used when: market condition is Green, VIX is in the 15–20 range (moderate), and you expect SPX to stay in a range.
+
+Structure: run a put credit spread AND a call credit spread simultaneously on the same expiry. Collect premium on both sides.
+
+- Put side: sell put below market (same rules as standard strategy)
+- Call side: sell call above market (same rules as bear call spread)
+- Both use the same expiry date
+- Combined credit = sum of both spreads
+
+Management: manage each leg independently using the same hold/roll/close rules. If one side gets tested, manage it per Section 6 without touching the other side.
+
+Use sparingly — iron condors require more active management and tie up more buying power per expiry.
+
+### 9.3 Do Nothing (Preferred Bearish Response)
+
+When VIX enters Red or Black condition, the correct bearish response is simply not trading and closing existing positions. Attempting to profit from a falling market while managing existing tested spreads adds risk and complexity. Preserve capital, close spreads, wait for conditions to improve.
+
+---
+
+## 10. The 7 Non-Negotiable Rules
+
+These rules are absolute. They do not bend for "but the market looks like it might recover" or "I'm so close to expiry." Follow them as written.
+
+1. **Close at 50% profit.** When you have collected half the maximum premium, close. The remaining credit is not worth the tail risk.
+
+2. **Close at 21 DTE.** If you have not hit 50% profit by 21 days before expiry, close anyway. Short gamma makes holding past 21 DTE a losing strategy on average.
+
+3. **Enter on dips only.** Only put on new trades when VIX is elevated above its 20-day average and the market has already pulled back. Never enter in a calm, rising market.
+
+4. **90 DTE first.** Always fill the 90 DTE rung before any other. It is the anchor spread of every entry.
+
+5. **No 60-day spreads in Yellow.** When VIX is 20–25, skip the 60–70 DTE rung entirely. The time buffer is insufficient if the position gets tested.
+
+6. **Half size in Yellow.** When VIX is 20–25, cut position size in half. The elevated premium is tempting but the elevated risk is real.
+
+7. **Black means close everything.** When VIX exceeds 35, close all open spreads immediately without analysis. Capital preservation is the only objective.
+
+---
+
+## 11. UI/UX Requirements for Webapp
+
+### 11.1 Market Condition Display
+
+The market condition (Green/Yellow/Red/Black) should be the dominant visual element on the trader dashboard. It must be immediately visible without scrolling on both desktop and mobile (Chrome).
+
+Required display elements:
+- Large colored status indicator using the hex codes defined in Section 2.1
+- Current VIX level (live, 15-minute delay minimum)
+- VIX trend pattern (Pattern 1–4 from Section 3.1) — requires 20-day VIX average
+- Number of open spread slots remaining (out of 10)
+- Monthly income progress toward goal
+
+### 11.2 Pre-Trade Checklist
+
+Before allowing a new trade entry to be logged, the app should display a checklist:
+1. Market condition — Green or Yellow?
+2. VIX trend pattern — Pattern 1 or 2?
+3. Slots available?
+4. Which DTE rungs are open?
+
+The checklist should resolve automatically from live data where possible. The user confirms and proceeds.
+
+### 11.3 Position Management Alerts
+
+When an open position meets any of the following conditions, surface an alert:
+- Reached 50% profit target → "Close this position"
+- Reached 21 DTE → "Time stop — close this position"
+- Short delta exceeded 0.20 → "Delta warning — review this position"
+- SPX dropped more than 5% from entry date → "Strike approaching — check recovery table"
+- VIX entered Red condition → "No new trades — manage existing positions"
+- VIX entered Black condition → "Emergency stop — close all positions"
+
+### 11.4 Go/No-Go Simulator
+
+An interactive tool that takes four inputs and returns a single clear action:
+- Current VIX level (slider or input)
+- VIX trend pattern (dropdown — Pattern 1–4)
+- DTE remaining on position (slider)
+- SPX drop from entry (slider, 0–20%)
+- Strike touched (yes/no toggle)
+
+Output: one of — GO / REDUCED / STOP / EMERGENCY / HOLD / ROLL / CLOSE — with a one-sentence explanation.
+
+### 11.5 DTE Ladder Display
+
+On the entry screen, show the four DTE rungs with:
+- Current priority order (P1–P4)
+- Whether each rung is available given current condition (Yellow disables P3)
+- Whether slots are available for each rung
+- Expected theta behavior (fast/medium/slow)
+
+---
+
+## 12. Underlying — SPX vs SPY vs ES
+
+This strategy uses SPX (S&P 500 index options) specifically, not SPY (ETF options) or ES (futures options).
+
+**Reasons to use SPX:**
+- Section 1256 tax treatment (60/40 long-term/short-term regardless of holding period)
+- Cash settled — no share delivery on assignment
+- European style — cannot be assigned early
+- Higher notional value means fewer contracts needed for same dollar exposure
+- Wider bid/ask spreads are offset by the tax advantage on profitable trades
+
+**SPX option characteristics:**
+- Multiplier: 100 (each point = $100)
+- Settlement: cash, at expiration
+- Style: European (no early assignment risk)
+- Expirations: Monday/Wednesday/Friday weekly + standard monthly
+
+Use standard monthly expirations for this strategy (third Friday of each month). Avoid weekly expirations — gamma is too aggressive for a credit spread strategy.
+
+---
+
+*Trading Rules Spec v1.0 — SPX put credit spread systematic strategy.*
+*Covers: market condition system, VIX trend check, entry rules, DTE ladder, position management, bearish alternatives, non-negotiable rules, and webapp UI requirements.*

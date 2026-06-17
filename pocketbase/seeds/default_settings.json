@@ -1,0 +1,170 @@
+[
+  {
+    "key": "green_vix_max",
+    "value": 18,
+    "category": "market_color",
+    "description": "Maximum VIX level for GREEN market condition"
+  },
+  {
+    "key": "yellow_vix_max",
+    "value": 25,
+    "category": "market_color",
+    "description": "Maximum VIX level for YELLOW market condition"
+  },
+  {
+    "key": "red_vix_max",
+    "value": 35,
+    "category": "market_color",
+    "description": "Maximum VIX level for RED market condition"
+  },
+  {
+    "key": "black_vix_above",
+    "value": 35,
+    "category": "market_color",
+    "description": "VIX level above which triggers BLACK circuit breaker"
+  },
+  {
+    "key": "black_spx_drop_pct",
+    "value": -5,
+    "category": "market_color",
+    "description": "SPX intraday drop percentage that triggers BLACK circuit breaker"
+  },
+  {
+    "key": "green_spx_above_50dma",
+    "value": true,
+    "category": "market_color",
+    "description": "GREEN requires SPX above 50-day moving average"
+  },
+  {
+    "key": "green_spx_above_200dma",
+    "value": true,
+    "category": "market_color",
+    "description": "GREEN requires SPX above 200-day moving average"
+  },
+  {
+    "key": "yellow_spx_below_50dma",
+    "value": true,
+    "category": "market_color",
+    "description": "YELLOW triggered when SPX falls below 50-day moving average"
+  },
+  {
+    "key": "red_spx_below_200dma",
+    "value": true,
+    "category": "market_color",
+    "description": "RED triggered when SPX falls below 200-day moving average"
+  },
+  {
+    "key": "total_slots",
+    "value": 10,
+    "category": "trade_capacity",
+    "description": "Total number of available trade capacity slots"
+  },
+  {
+    "key": "spread_width",
+    "value": 50,
+    "category": "trade_capacity",
+    "description": "Default spread width in points for SPX put credit spreads"
+  },
+  {
+    "key": "dte_minimum",
+    "value": 30,
+    "category": "trade_capacity",
+    "description": "Minimum days to expiration for new option positions"
+  },
+  {
+    "key": "delta_maximum",
+    "value": 0.16,
+    "category": "trade_capacity",
+    "description": "Maximum short delta allowed for new option positions"
+  },
+  {
+    "key": "max_contracts_per_slot",
+    "value": 1,
+    "category": "trade_capacity",
+    "description": "Maximum number of contracts allowed per trade slot"
+  },
+  {
+    "key": "wash_sale_window_days",
+    "value": 31,
+    "category": "tax",
+    "description": "Number of days before and after a sale to check for wash sale violations"
+  },
+  {
+    "key": "holding_period_days",
+    "value": 365,
+    "category": "tax",
+    "description": "Days held to qualify for long-term capital gains treatment"
+  },
+  {
+    "key": "marginal_tax_rate",
+    "value": 0.32,
+    "category": "tax",
+    "description": "Marginal income tax rate used for tax-adjusted calculations"
+  },
+  {
+    "key": "long_term_rate",
+    "value": 0.15,
+    "category": "tax",
+    "description": "Long-term capital gains tax rate"
+  },
+  {
+    "key": "short_term_rate",
+    "value": 0.32,
+    "category": "tax",
+    "description": "Short-term capital gains tax rate (same as ordinary income)"
+  },
+  {
+    "key": "default_dashboard",
+    "value": "accounting",
+    "category": "display",
+    "description": "Dashboard shown on app startup"
+  },
+  {
+    "key": "currency",
+    "value": "USD",
+    "category": "display",
+    "description": "Currency symbol for display formatting"
+  },
+  {
+    "key": "date_format",
+    "value": "MM/DD/YYYY",
+    "category": "display",
+    "description": "Date display format throughout the application"
+  },
+  {
+    "key": "batch_size",
+    "value": 50,
+    "category": "import",
+    "description": "Number of records per batch during PocketBase import"
+  },
+  {
+    "key": "max_file_size_mb",
+    "value": 10,
+    "category": "import",
+    "description": "Maximum file size in MB allowed for CSV/XLSX import"
+  },
+  {
+    "key": "benchmark_symbol",
+    "value": "SPX",
+    "category": "performance",
+    "description": "Benchmark index symbol for performance comparison"
+  },
+  {
+    "key": "risk_free_rate",
+    "value": 0.05,
+    "category": "performance",
+    "description": "Annual risk-free rate for Sharpe ratio and performance calculations"
+  },
+  {
+    "key": "concentration_threshold_pct",
+    "value": 25,
+    "category": "risk",
+    "description": "Percentage of portfolio in single position that triggers concentration warning"
+  },
+  {
+    "key": "max_sector_pct",
+    "value": 40,
+    "category": "risk",
+    "description": "Maximum percentage of portfolio allowed in a single sector"
+  }
+]

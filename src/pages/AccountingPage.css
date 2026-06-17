@@ -1,0 +1,324 @@
+/* Accounting Dashboard Styles */
+
+.accounting-page {
+  max-width: 100%;
+}
+
+.accounting-loading {
+  color: var(--color-text-muted);
+  padding: 32px 0;
+}
+
+.accounting-error {
+  background-color: rgba(244, 67, 54, 0.1);
+  border: 1px solid rgba(244, 67, 54, 0.3);
+  border-radius: 8px;
+  padding: 24px;
+  text-align: center;
+}
+
+.accounting-error p {
+  color: #ef5350;
+  margin: 0 0 12px;
+}
+
+.accounting-retry-btn {
+  padding: 6px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.accounting-retry-btn:hover {
+  background-color: var(--color-surface-hover);
+  border-color: var(--color-primary);
+}
+
+/* Summary Cards */
+.accounting-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.accounting-card {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 16px 20px;
+}
+
+.accounting-card-label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0 0 8px;
+}
+
+.accounting-card-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.accounting-card-value.positive {
+  color: #66bb6a;
+}
+
+.accounting-card-value.negative {
+  color: #ef5350;
+}
+
+.accounting-card-value.na {
+  color: var(--color-text-muted);
+  font-size: 1.25rem;
+}
+
+/* Section headers */
+.accounting-section-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin: 0 0 12px;
+}
+
+/* Positions Table */
+.accounting-table-wrapper {
+  overflow-x: auto;
+  margin-bottom: 32px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.accounting-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8125rem;
+}
+
+.accounting-table th {
+  text-align: left;
+  padding: 6px 8px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  border-bottom: 1px solid var(--color-border);
+  font-size: 0.625rem;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  white-space: normal;
+}
+
+.accounting-table th.numeric {
+  text-align: right;
+}
+
+.accounting-table td {
+  padding: 6px 8px;
+  color: var(--color-text);
+  border-bottom: 1px solid var(--color-border);
+  white-space: nowrap;
+}
+
+.accounting-table td.numeric {
+  text-align: right;
+  font-family: 'Fira Code', 'Cascadia Code', monospace;
+  font-size: 0.75rem;
+}
+
+.accounting-table td.symbol {
+  font-weight: 600;
+  color: var(--color-primary);
+}
+
+.accounting-table th.narrow-col {
+  max-width: 55px;
+  width: 55px;
+}
+
+.accounting-table td.positive {
+  color: #66bb6a;
+}
+
+.accounting-table td.negative {
+  color: #ef5350;
+}
+
+.accounting-table td.na {
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+.accounting-table tbody tr:hover {
+  background-color: var(--color-surface-hover);
+}
+
+.accounting-table-empty {
+  text-align: center;
+  color: var(--color-text-muted);
+  padding: 24px 12px;
+  font-style: italic;
+}
+
+/* Net Worth Section */
+.accounting-net-worth {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 20px 24px;
+}
+
+.accounting-net-worth-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+  margin-top: 12px;
+}
+
+.accounting-net-worth-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.accounting-net-worth-label {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  font-weight: 500;
+}
+
+.accounting-net-worth-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-text);
+  font-family: 'Fira Code', 'Cascadia Code', monospace;
+}
+
+.accounting-net-worth-value.total {
+  color: var(--color-primary);
+  font-size: 1.5rem;
+}
+
+.accounting-net-worth-note {
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+  margin-top: 12px;
+  font-style: italic;
+}
+
+/* Account Badges */
+.account-badge {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px;
+  letter-spacing: 0.02em;
+}
+
+.account-badge--spreads {
+  background: rgba(255, 152, 0, 0.15);
+  color: #ffa726;
+}
+
+.account-badge--robinhood {
+  background: rgba(76, 175, 80, 0.15);
+  color: #66bb6a;
+}
+
+.account-badge--roth {
+  background: rgba(79, 195, 247, 0.15);
+  color: #4fc3f7;
+}
+
+.account-badge--traditional {
+  background: rgba(186, 104, 200, 0.15);
+  color: #ba68c8;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .accounting-cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .accounting-net-worth-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .accounting-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .accounting-net-worth-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Ex-Dividend Date Urgency Colors */
+.ex-div--urgent {
+  background: rgba(239, 83, 80, 0.15);
+  color: #ef5350;
+  font-weight: 600;
+}
+
+.ex-div--soon {
+  background: rgba(255, 193, 7, 0.15);
+  color: #ffca28;
+  font-weight: 600;
+}
+
+.ex-div--upcoming {
+  background: rgba(76, 175, 80, 0.15);
+  color: #66bb6a;
+}
+
+/* Ensure table data cells don't wrap */
+.accounting-table td {
+  white-space: nowrap;
+}
+
+/* 52-Week Range Position Colors (Google Sheets palette) */
+.range--dark-green {
+  background: rgba(52, 168, 83, 0.2);
+  color: #34a853;
+  font-weight: 600;
+}
+
+.range--light-green {
+  background: rgba(87, 187, 138, 0.15);
+  color: #57bb8a;
+}
+
+.range--yellow {
+  background: rgba(255, 214, 0, 0.15);
+  color: #f4b400;
+}
+
+.range--red {
+  background: rgba(234, 67, 53, 0.15);
+  color: #ea4335;
+  font-weight: 600;
+}
+
+/* Historical Value Chart */
+.historical-chart-section {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 20px 24px;
+  margin-top: 24px;
+}
+
+/* Account group separator */
+.accounting-table tr.account-separator td {
+  border-top: 3px solid #4fc3f7;
+  padding-top: 10px;
+}

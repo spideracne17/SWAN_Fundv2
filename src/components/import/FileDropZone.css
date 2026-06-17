@@ -1,0 +1,126 @@
+.file-drop-zone {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  padding: 32px;
+  border: 2px dashed var(--color-border);
+  border-radius: 12px;
+  background-color: var(--color-surface);
+  cursor: pointer;
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease,
+    box-shadow 0.2s ease;
+  outline: none;
+}
+
+.file-drop-zone:hover {
+  border-color: var(--color-primary);
+  background-color: var(--color-surface-hover);
+}
+
+.file-drop-zone:focus-visible {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(79, 195, 247, 0.3);
+}
+
+/* Drag-over state */
+.file-drop-zone--drag-over {
+  border-color: var(--color-primary);
+  border-style: solid;
+  background-color: var(--color-active-bg);
+  box-shadow: 0 0 0 4px rgba(79, 195, 247, 0.15);
+}
+
+/* Error state */
+.file-drop-zone--error {
+  border-color: #ef5350;
+  background-color: rgba(239, 83, 80, 0.05);
+}
+
+/* Success state */
+.file-drop-zone--success {
+  border-color: #66bb6a;
+  background-color: rgba(102, 187, 106, 0.05);
+}
+
+/* Hidden file input */
+.file-drop-zone__input {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* Content */
+.file-drop-zone__content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+  pointer-events: none;
+}
+
+.file-drop-zone__content > * {
+  pointer-events: auto;
+}
+
+.file-drop-zone__icon {
+  font-size: 2.5rem;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.file-drop-zone__text {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.file-drop-zone__text--error {
+  color: #ef5350;
+}
+
+.file-drop-zone__text--success {
+  color: #66bb6a;
+}
+
+.file-drop-zone__subtext {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+}
+
+.file-drop-zone__hint {
+  margin: 8px 0 0;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+
+.file-drop-zone__browse-btn {
+  background: none;
+  border: none;
+  color: var(--color-primary);
+  font-size: inherit;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+  pointer-events: auto;
+}
+
+.file-drop-zone__browse-btn:hover {
+  color: var(--color-primary-hover);
+}
+
+.file-drop-zone__browse-btn:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  border-radius: 2px;
+}

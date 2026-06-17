@@ -1,0 +1,157 @@
+.risk-page {
+  max-width: 900px;
+}
+
+.risk-loading,
+.risk-error {
+  padding: 2rem;
+  text-align: center;
+  color: var(--text-secondary, #6b7280);
+}
+
+.risk-error p {
+  margin-bottom: 1rem;
+  color: var(--color-danger, #ef4444);
+}
+
+.risk-retry-btn {
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--border-color, #d1d5db);
+  border-radius: 6px;
+  background: var(--bg-surface, #fff);
+  cursor: pointer;
+}
+
+.risk-retry-btn:hover {
+  background: var(--bg-hover, #f9fafb);
+}
+
+/* Drawdown Card */
+.risk-drawdown-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.5rem;
+  margin-bottom: 1.5rem;
+  border-radius: 8px;
+  background: var(--bg-surface, #fff);
+  border: 1px solid var(--border-color, #e5e7eb);
+}
+
+.risk-drawdown-label {
+  font-size: 0.875rem;
+  color: var(--text-secondary, #6b7280);
+}
+
+.risk-drawdown-value {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--color-danger, #ef4444);
+}
+
+/* Section Title */
+.risk-section-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+/* Concentration Bars */
+.risk-concentration {
+  margin-bottom: 2rem;
+}
+
+.risk-concentration-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.risk-bar-row {
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  border: 1px solid transparent;
+}
+
+.risk-bar-row--flagged {
+  background: var(--color-danger-bg, #fef2f2);
+  border-color: var(--color-danger-border, #fecaca);
+}
+
+.risk-bar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.25rem;
+}
+
+.risk-bar-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.risk-flag-badge {
+  margin-left: 0.5rem;
+  font-size: 0.75rem;
+}
+
+.risk-bar-amount {
+  font-size: 0.8rem;
+  color: var(--text-secondary, #6b7280);
+}
+
+.risk-bar-track {
+  height: 8px;
+  background: var(--bg-muted, #f3f4f6);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.risk-bar-fill {
+  height: 100%;
+  background: var(--color-primary, #3b82f6);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.risk-bar-fill--flagged {
+  background: var(--color-danger, #ef4444);
+}
+
+/* Flagged Positions */
+.risk-flagged {
+  margin-top: 1.5rem;
+}
+
+.risk-flagged-list {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.risk-flagged-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  background: var(--color-danger-bg, #fef2f2);
+  border: 1px solid var(--color-danger-border, #fecaca);
+}
+
+.risk-flagged-symbol {
+  font-weight: 600;
+  min-width: 60px;
+}
+
+.risk-flagged-pct {
+  font-weight: 500;
+  color: var(--color-danger, #ef4444);
+}
+
+.risk-flagged-note {
+  font-size: 0.8rem;
+  color: var(--text-secondary, #6b7280);
+}

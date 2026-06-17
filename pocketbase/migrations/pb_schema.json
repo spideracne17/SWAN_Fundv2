@@ -1,0 +1,885 @@
+[
+  {
+    "name": "accounts",
+    "type": "base",
+    "schema": [
+      {
+        "name": "name",
+        "type": "text",
+        "required": true,
+        "options": { "min": 1, "max": 100 }
+      },
+      {
+        "name": "broker",
+        "type": "select",
+        "required": true,
+        "options": { "maxSelect": 1, "values": ["schwab", "robinhood"] }
+      },
+      {
+        "name": "account_type",
+        "type": "select",
+        "required": true,
+        "options": { "maxSelect": 1, "values": ["taxable", "roth_ira", "traditional_ira"] }
+      },
+      {
+        "name": "account_number_last4",
+        "type": "text",
+        "required": true,
+        "options": { "min": 4, "max": 4, "pattern": "^\\d{4}$" }
+      },
+      {
+        "name": "tax_status",
+        "type": "select",
+        "required": true,
+        "options": { "maxSelect": 1, "values": ["taxable", "tax_deferred", "tax_free"] }
+      },
+      {
+        "name": "is_active",
+        "type": "bool",
+        "required": false,
+        "options": {}
+      },
+      {
+        "name": "default_lot_method",
+        "type": "select",
+        "required": true,
+        "options": { "maxSelect": 1, "values": ["fifo", "lifo", "specific_id"] }
+      }
+    ]
+  },
+  {
+    "name": "instruments",
+    "type": "base",
+    "schema": [
+      {
+        "name": "symbol",
+        "type": "text",
+        "required": true,
+        "options": { "min": 1, "max": 20 }
+      },
+      {
+        "name": "name",
+        "type": "text",
+        "required": false,
+        "options": { "max": 200 }
+      },
+      {
+        "name": "instrument_type",
+        "type": "select",
+        "required": true,
+        "options": { "maxSelect": 1, "values": ["stock", "etf", "option", "bond", "mutual_fund"] }
+      },
+      {
+        "name": "underlying_symbol",
+        "type": "text",
+        "required": false,
+        "options": { "max": 20 }
+      }
+    ]
+  },
+  {
+    "name": "settings",
+    "type": "base",
+    "schema": [
+      {
+        "name": "key",
+        "type": "text",
+        "required": true,
+        "unique": true,
+        "options": { "min": 1, "max": 100 }
+      },
+      {
+        "name": "value",
+        "type": "json",
+        "required": true,
+        "options": {}
+      },
+      {
+        "name": "category",
+        "type": "select",
+        "required": true,
+        "options": { "maxSelect": 1, "values": ["market_color", "trade_capacity", "tax", "display", "import", "performance", "risk"] }
+      },
+      {
+        "name": "description",
+        "type": "text",
+        "required": false,
+        "options": { "max": 500 }
+      }
+    ]
+  },
+  {
+    "name": "tax_lots",
+    "type": "base",
+    "schema": [
+      {
+        "name": "account_id",
+        "type": "relation",
+        "required": true,
+        "options": { "collectionId": "accounts", "cascadeDelete": false, "maxSelect": 1 }
+      },
+      {
+        "name": "symbol",
+        "type": "text",
+        "required": true,
+        "options": { "min": 1, "max": 20 }
+      },
+      {
+        "name": "instrument_id",
+        "type": "relation",
+        "required": false,
+        "options": { "collectionId": "instruments", "cascadeDelete": false, "maxSelect": 1 }
+      },
+      {
+        "name": "acquisition_date",
+        "type": "date",
+        "required": true,
+        "options": {}
+      },
+      {
+        "name": "settlement_date",
+        "type": "date",
+        "required": false,
+        "options": {}
+      },
+      {
+        "name": "shares_acquired",
+        "type": "number",
+        "required": true,
+        "options": { "min": 0 }
+      },
+      {
+        "name": "remaining_shares",
+        "type": "number",
+        "required": true,
+        "options": { "min": 0 }
+      },
+      {
+        "name": "cost_per_share",
+        "type": "number",
+        "required": true,
+        "options": { "min": 0 }
+      },
+      {
+        "name": "total_cost_basis",
+        "type": "number",
+        "required": true,
+        "options": { "min": 0 }
+      },
+      {
+        "name": "acquisition_type",
+        "type": "select",
+        "required": true,
+        "options": { "maxSelect": 1, "values": ["buy", "drip", "transfer_in", "exercise", "split_adjustment"] }
+      },
+      {
+        "name": "status",
+        "type": "select",
+        "required": true,
+        "options": { "maxSelect": 1, "values": ["open", "partial", "closed"] }
+      },
+      {
+        "name": "fees",
+        "type": "number",
+        "required": false,
+        "options": { "min": 0 }
+      },
+      {
+        "name": "source_transaction_hash",
+        "type": "text",
+        "required": false,
+        "options": { "max": 64 }
+      },
+      {
+        "name": "drip_source_dividend_id",
+        "type": "text",
+        "required": false,
+        "options": { "max": 50 }
+      },
+      {
+        "name": "split_adjusted",
+        "type": "bool",
+        "required": false,
+        "options": {}
+      },
+      {
+        "name": "original_shares",
+        "type": "number",
+        "required": false,
+        "options": { "min": 0 }
+      },
+      {
+        "name": "original_cost_per_share",
+        "type": "number",
+        "required": false,
+        "options": { "min": 0 }
+      }
+    ]
+  },
+  {
+    "name": "dispositions",
+    "type": "base",
+    "schema": [
+      {
+        "name": "lot_id",
+        "type": "relation",
+        "required": true,
+        "options": { "collectionId": "tax_lots", "cascadeDelete": false, "maxSelect": 1 }
+      },
+      {
+        "name": "disposition_date",
+        "type": "date",
+        "required": true,
+        "options": {}
+      },
+      {
+        "name": "shares_disposed",
+        "type": "number",
+        "required": true,
+        "options": { "min": 0 }
+      },
+      {
+        "name": "proceeds_per_share",
+        "type": "number",
+        "required": true,
+        "options": {}
+      },
+      {
+        "name": "cost_basis_per_share",
+        "type": "number",
+        "required": true,
+        "options": { "min": 0 }
+      },
+      {
+        "name": "gain_loss",
+        "type": "number",
+        "required": true,
+        "options": {}
+      },
+      {
+        "name": "holding_period",
+        "type": "select",
+        "required": true,
+        "options": { "maxSelect": 1, "values": ["short_term", "long_term"] }
+      },
+      {
+        "name": "wash_sale_disallowed",
+        "type": "number",
+        "required": false,
+        "options": { "min": 0 }
+      }
+    ]
+  },
+  {
+    "name": "option_positions",
+    "type": "base",
+    "schema": [
+      {
+        "name": "account_id",
+        "type": "relation",
+        "required": true,
+        "options": { "collectionId": "accounts", "cascadeDelete": false, "maxSelect": 1 }
+      },
+      {
+        "name": "underlying_symbol",
+        "type": "text",
+        "required": true,
+        "options": { "min": 1, "max": 20 }
+      },
+      {
+        "name": "option_symbol",
+        "type": "text",
+        "required": true,
+        "options": { "min": 1, "max": 50 }
+      },
+      {
+        "name": "option_type",
+        "type": "select",
+        "required": true,
+        "options": { "maxSelect": 1, "values": ["call", "put"] }
+      },
+      {
+        "name": "direction",
+        "type": "select",
+        "required": true,
+        "options": { "maxSelect": 1, "values": ["long", "short"] }
+      },
+      {
+        "name": "strike_price",
+        "type": "number",
+        "required": true,
+        "options": { "min": 0 }
+      },
+      {
+        "name": "expiration_date",
+        "type": "date",
+        "required": true,
+        "options": {}
+      },
+      {
+        "name": "contracts",
+        "type": "number",
+        "required": true,
+        "options": { "min": 1 }
+      },
+      {
+        "name": "premium_per_contract",
+        "type": "number",
+        "required": true,
+        "options": {}
+      },
+      {
+        "name": "total_premium",
+        "type": "number",
+        "required": true,
+        "options": {}
+      },
+      {
+        "name": "status",
+        "type": "select",
+        "required": true,
+        "options": { "maxSelect": 1, "values": ["open", "closed", "expired", "assigned", "rolled"] }
+      },
+      {
+        "name": "spread_id",
+        "type": "relation",
+        "required": false,
+        "options": { "collectionId": "option_spreads", "cascadeDelete": false, "maxSelect": 1 }
+      },
+      {
+        "name": "roll_chain_id",
+        "type": "text",
+        "required": false,
+        "options": { "max": 50 }
+      },
+      {
+        "name": "opened_date",
+        "type": "date",
+        "required": true,
+        "options": {}
+      },
+      {
+        "name": "closed_date",
+        "type": "date",
+        "required": false,
+        "options": {}
+      },
+      {
+        "name": "close_premium",
+        "type": "number",
+        "required": false,
+        "options": {}
+      },
+      {
+        "name": "pnl",
+        "type": "number",
+        "required": false,
+        "options": {}
+      },
+      {
+        "name": "assignment_lot_id",
+        "type": "text",
+        "required": false,
+        "options": { "max": 50 }
+      },
+      {
+        "name": "source_transaction_hash",
+        "type": "text",
+        "required": false,
+        "options": { "max": 64 }
+      }
+    ]
+  },
+  {
+    "name": "option_spreads",
+    "type": "base",
+    "schema": [
+      {
+        "name": "spread_type",
+        "type": "select",
+        "required": true,
+        "options": { "maxSelect": 1, "values": ["put_credit_spread", "call_credit_spread", "covered_call", "csp"] }
+      },
+      {
+        "name": "short_leg_id",
+        "type": "relation",
+        "required": true,
+        "options": { "collectionId": "option_positions", "cascadeDelete": false, "maxSelect": 1 }
+      },
+      {
+        "name": "long_leg_id",
+        "type": "relation",
+        "required": false,
+        "options": { "collectionId": "option_positions", "cascadeDelete": false, "maxSelect": 1 }
+      },
+      {
+        "name": "underlying_symbol",
+        "type": "text",
+        "required": true,
+        "options": { "min": 1, "max": 20 }
+      },
+      {
+        "name": "net_credit",
+        "type": "number",
+        "required": true,
+        "options": {}
+      },
+      {
+        "name": "max_loss",
+        "type": "number",
+        "required": true,
+        "options": {}
+      },
+      {
+        "name": "collateral_required",
+        "type": "number",
+        "required": true,
+        "options": { "min": 0 }
+      },
+      {
+        "name": "breakeven",
+        "type": "number",
+        "required": true,
+        "options": { "min": 0 }
+      },
+      {
+        "name": "status",
+        "type": "select",
+        "required": true,
+        "options": { "maxSelect": 1, "values": ["open", "closed", "expired", "assigned"] }
+      }
+    ]
+  },
+  {
+    "name": "cash_transactions",
+    "type": "base",
+    "schema": [
+      {
+        "name": "account_id",
+        "type": "relation",
+        "required": true,
+        "options": { "collectionId": "accounts", "cascadeDelete": false, "maxSelect": 1 }
+      },
+      {
+        "name": "transaction_date",
+        "type": "date",
+        "required": true,
+        "options": {}
+      },
+      {
+        "name": "settlement_date",
+        "type": "date",
+        "required": false,
+        "options": {}
+      },
+      {
+        "name": "transaction_type",
+        "type": "text",
+        "required": true,
+        "options": { "min": 1, "max": 50 }
+      },
+      {
+        "name": "symbol",
+        "type": "text",
+        "required": false,
+        "options": { "max": 20 }
+      },
+      {
+        "name": "description",
+        "type": "text",
+        "required": false,
+        "options": { "max": 500 }
+      },
+      {
+        "name": "quantity",
+        "type": "number",
+        "required": false,
+        "options": {}
+      },
+      {
+        "name": "price_per_unit",
+        "type": "number",
+        "required": false,
+        "options": {}
+      },
+      {
+        "name": "total_amount",
+        "type": "number",
+        "required": true,
+        "options": {}
+      },
+      {
+        "name": "fees",
+        "type": "number",
+        "required": false,
+        "options": { "min": 0 }
+      },
+      {
+        "name": "source_format",
+        "type": "text",
+        "required": false,
+        "options": { "max": 50 }
+      },
+      {
+        "name": "raw_action",
+        "type": "text",
+        "required": false,
+        "options": { "max": 200 }
+      },
+      {
+        "name": "hash",
+        "type": "text",
+        "required": false,
+        "options": { "max": 64 }
+      }
+    ]
+  },
+  {
+    "name": "dividends",
+    "type": "base",
+    "schema": [
+      {
+        "name": "account_id",
+        "type": "relation",
+        "required": true,
+        "options": { "collectionId": "accounts", "cascadeDelete": false, "maxSelect": 1 }
+      },
+      {
+        "name": "symbol",
+        "type": "text",
+        "required": true,
+        "options": { "min": 1, "max": 20 }
+      },
+      {
+        "name": "ex_date",
+        "type": "date",
+        "required": true,
+        "options": {}
+      },
+      {
+        "name": "pay_date",
+        "type": "date",
+        "required": true,
+        "options": {}
+      },
+      {
+        "name": "record_date",
+        "type": "date",
+        "required": false,
+        "options": {}
+      },
+      {
+        "name": "amount_per_share",
+        "type": "number",
+        "required": true,
+        "options": { "min": 0 }
+      },
+      {
+        "name": "total_amount",
+        "type": "number",
+        "required": true,
+        "options": { "min": 0 }
+      },
+      {
+        "name": "shares_held_at_ex",
+        "type": "number",
+        "required": true,
+        "options": { "min": 0 }
+      },
+      {
+        "name": "classification",
+        "type": "select",
+        "required": true,
+        "options": { "maxSelect": 1, "values": ["qualified", "ordinary", "return_of_capital", "section_199a"] }
+      },
+      {
+        "name": "is_drip",
+        "type": "bool",
+        "required": false,
+        "options": {}
+      },
+      {
+        "name": "drip_lot_id",
+        "type": "relation",
+        "required": false,
+        "options": { "collectionId": "tax_lots", "cascadeDelete": false, "maxSelect": 1 }
+      },
+      {
+        "name": "tax_year",
+        "type": "number",
+        "required": true,
+        "options": { "min": 2000, "max": 2100 }
+      },
+      {
+        "name": "form_1099_amount",
+        "type": "number",
+        "required": false,
+        "options": { "min": 0 }
+      },
+      {
+        "name": "source_transaction_hash",
+        "type": "text",
+        "required": false,
+        "options": { "max": 64 }
+      }
+    ]
+  },
+  {
+    "name": "csv_import_log",
+    "type": "base",
+    "schema": [
+      {
+        "name": "filename",
+        "type": "text",
+        "required": true,
+        "options": { "min": 1, "max": 255 }
+      },
+      {
+        "name": "format_detected",
+        "type": "text",
+        "required": true,
+        "options": { "max": 50 }
+      },
+      {
+        "name": "account_id",
+        "type": "relation",
+        "required": true,
+        "options": { "collectionId": "accounts", "cascadeDelete": false, "maxSelect": 1 }
+      },
+      {
+        "name": "import_date",
+        "type": "date",
+        "required": true,
+        "options": {}
+      },
+      {
+        "name": "records_total",
+        "type": "number",
+        "required": true,
+        "options": { "min": 0 }
+      },
+      {
+        "name": "records_new",
+        "type": "number",
+        "required": true,
+        "options": { "min": 0 }
+      },
+      {
+        "name": "records_duplicate",
+        "type": "number",
+        "required": true,
+        "options": { "min": 0 }
+      },
+      {
+        "name": "records_error",
+        "type": "number",
+        "required": true,
+        "options": { "min": 0 }
+      },
+      {
+        "name": "errors",
+        "type": "json",
+        "required": false,
+        "options": {}
+      },
+      {
+        "name": "file_hash",
+        "type": "text",
+        "required": true,
+        "options": { "max": 64 }
+      },
+      {
+        "name": "backup_generated",
+        "type": "bool",
+        "required": false,
+        "options": {}
+      }
+    ]
+  },
+  {
+    "name": "stock_splits",
+    "type": "base",
+    "schema": [
+      {
+        "name": "symbol",
+        "type": "text",
+        "required": true,
+        "options": { "min": 1, "max": 20 }
+      },
+      {
+        "name": "split_date",
+        "type": "date",
+        "required": true,
+        "options": {}
+      },
+      {
+        "name": "ratio_from",
+        "type": "number",
+        "required": true,
+        "options": { "min": 1 }
+      },
+      {
+        "name": "ratio_to",
+        "type": "number",
+        "required": true,
+        "options": { "min": 1 }
+      },
+      {
+        "name": "effective_date",
+        "type": "date",
+        "required": true,
+        "options": {}
+      },
+      {
+        "name": "lots_adjusted",
+        "type": "number",
+        "required": false,
+        "options": { "min": 0 }
+      },
+      {
+        "name": "applied",
+        "type": "bool",
+        "required": false,
+        "options": {}
+      },
+      {
+        "name": "applied_date",
+        "type": "date",
+        "required": false,
+        "options": {}
+      }
+    ]
+  },
+  {
+    "name": "ira_contributions",
+    "type": "base",
+    "schema": [
+      {
+        "name": "account_id",
+        "type": "relation",
+        "required": true,
+        "options": { "collectionId": "accounts", "cascadeDelete": false, "maxSelect": 1 }
+      },
+      {
+        "name": "tax_year",
+        "type": "number",
+        "required": true,
+        "options": { "min": 2000, "max": 2100 }
+      },
+      {
+        "name": "contribution_date",
+        "type": "date",
+        "required": true,
+        "options": {}
+      },
+      {
+        "name": "amount",
+        "type": "number",
+        "required": true,
+        "options": { "min": 0 }
+      },
+      {
+        "name": "contribution_type",
+        "type": "select",
+        "required": true,
+        "options": { "maxSelect": 1, "values": ["regular", "catchup", "rollover"] }
+      },
+      {
+        "name": "source",
+        "type": "text",
+        "required": false,
+        "options": { "max": 100 }
+      }
+    ]
+  },
+  {
+    "name": "sweep_balances",
+    "type": "base",
+    "schema": [
+      {
+        "name": "account_id",
+        "type": "relation",
+        "required": true,
+        "options": { "collectionId": "accounts", "cascadeDelete": false, "maxSelect": 1 }
+      },
+      {
+        "name": "balance_date",
+        "type": "date",
+        "required": true,
+        "options": {}
+      },
+      {
+        "name": "amount",
+        "type": "number",
+        "required": true,
+        "options": {}
+      },
+      {
+        "name": "currency",
+        "type": "text",
+        "required": false,
+        "options": { "max": 10 }
+      }
+    ]
+  },
+  {
+    "name": "market_events",
+    "type": "base",
+    "schema": [
+      {
+        "name": "event_date",
+        "type": "date",
+        "required": true,
+        "options": {}
+      },
+      {
+        "name": "event_type",
+        "type": "text",
+        "required": true,
+        "options": { "min": 1, "max": 50 }
+      },
+      {
+        "name": "vix_level",
+        "type": "number",
+        "required": false,
+        "options": { "min": 0 }
+      },
+      {
+        "name": "spx_price",
+        "type": "number",
+        "required": false,
+        "options": { "min": 0 }
+      },
+      {
+        "name": "spx_50dma",
+        "type": "number",
+        "required": false,
+        "options": { "min": 0 }
+      },
+      {
+        "name": "spx_200dma",
+        "type": "number",
+        "required": false,
+        "options": { "min": 0 }
+      },
+      {
+        "name": "iv_rank",
+        "type": "number",
+        "required": false,
+        "options": { "min": 0, "max": 100 }
+      },
+      {
+        "name": "market_color",
+        "type": "select",
+        "required": false,
+        "options": { "maxSelect": 1, "values": ["GREEN", "YELLOW", "RED", "BLACK"] }
+      },
+      {
+        "name": "notes",
+        "type": "text",
+        "required": false,
+        "options": { "max": 1000 }
+      }
+    ]
+  }
+]

@@ -1,0 +1,577 @@
+/* ─── Trader Page — SPX Credit Spreads Dashboard ──────────────────────── */
+
+.trader-page {
+  max-width: 1200px;
+}
+
+.trader-subtitle {
+  color: var(--color-text-muted);
+  font-size: 0.8125rem;
+  margin: -4px 0 20px;
+  letter-spacing: 0.3px;
+}
+
+.trader-loading {
+  color: var(--color-text-muted);
+  padding: 32px 0;
+}
+
+.trader-error {
+  background-color: rgba(244, 67, 54, 0.1);
+  border: 1px solid rgba(244, 67, 54, 0.3);
+  border-radius: 8px;
+  padding: 24px;
+  text-align: center;
+}
+
+.trader-error p {
+  color: #ef5350;
+  margin: 0 0 12px;
+}
+
+.trader-btn {
+  padding: 6px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.trader-btn:hover {
+  background-color: var(--color-surface-hover);
+  border-color: var(--color-primary);
+}
+
+/* ─── Cards ────────────────────────────────────────────────────────────── */
+
+.trader-card {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 20px 24px;
+  margin-bottom: 20px;
+}
+
+.trader-card h3 {
+  margin: 0 0 16px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.trader-card h4 {
+  margin: 20px 0 10px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.trader-card--planning {
+  margin-bottom: 20px;
+}
+
+.trader-card--empty {
+  text-align: center;
+  padding: 40px 24px;
+}
+
+.empty-message {
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+/* ─── Dashboard Grid (Slots + Performance side by side) ────────────────── */
+
+.trader-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.trader-grid .trader-card {
+  margin-bottom: 0;
+}
+
+/* ─── Trade Planning Section ───────────────────────────────────────────── */
+
+.planning-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+  align-items: start;
+}
+
+/* SPX Price Stack (vertical: High → Current → Low) */
+.spx-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.spx-stack-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.spx-stack-row:last-child {
+  border-bottom: none;
+}
+
+.spx-stack-row--current {
+  background-color: rgba(79, 195, 247, 0.05);
+  border-radius: 6px;
+  margin: 4px -4px;
+  padding: 16px 20px;
+}
+
+.spx-stack-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  min-width: 85px;
+}
+
+.spx-stack-value {
+  font-size: 1.125rem;
+  font-weight: 600;
+  font-family: 'Fira Code', 'Cascadia Code', monospace;
+  color: var(--color-text);
+}
+
+.spx-stack-value--current {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #4fc3f7;
+}
+
+.spx-stack-date {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  margin-left: auto;
+}
+
+/* Strike Targets */
+.strike-targets {
+  display: flex;
+  flex-direction: column;
+}
+
+.strike-targets h4 {
+  margin: 0 0 10px;
+}
+
+/* Range badges (used in SPX stack) */
+.range-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 5px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  margin-left: auto;
+}
+
+/* 52-Week Range Color Classes */
+.range--dark-green {
+  background: rgba(52, 168, 83, 0.2);
+  color: #34a853;
+  font-weight: 600;
+}
+
+.range--light-green {
+  background: rgba(87, 187, 138, 0.15);
+  color: #57bb8a;
+}
+
+.range--yellow {
+  background: rgba(255, 214, 0, 0.15);
+  color: #f4b400;
+}
+
+.range--red {
+  background: rgba(234, 67, 53, 0.15);
+  color: #ea4335;
+  font-weight: 600;
+}
+
+/* ─── Strike Target Table ──────────────────────────────────────────────── */
+
+.strike-table-wrapper {
+  overflow-x: auto;
+}
+
+.strike-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8125rem;
+  margin-top: 4px;
+}
+
+.strike-table th {
+  text-align: left;
+  padding: 8px 12px;
+  color: var(--color-text-muted);
+  font-weight: 600;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.strike-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text);
+}
+
+.strike-table tr:last-child td {
+  border-bottom: none;
+}
+
+.strike-value {
+  font-family: 'Fira Code', 'Cascadia Code', monospace;
+  font-weight: 600;
+  color: #4fc3f7;
+}
+
+.delta-placeholder {
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+/* ─── Options P&L Summary Grid ─────────────────────────────────────────── */
+
+.trader-card--pnl {
+  margin-bottom: 20px;
+}
+
+.pnl-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.pnl-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 16px;
+  border-radius: 8px;
+  background-color: var(--color-bg);
+  border: 1px solid var(--color-border);
+}
+
+.pnl-card-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.pnl-card-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  font-family: 'Fira Code', 'Cascadia Code', monospace;
+  color: var(--color-text);
+}
+
+.pnl-card-sub {
+  font-size: 0.6875rem;
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+/* P&L color classes */
+.pnl--positive {
+  color: #66bb6a !important;
+}
+
+.pnl--negative {
+  color: #ef5350 !important;
+}
+
+/* ─── Slot Management ──────────────────────────────────────────────────── */
+
+.slot-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin-bottom: 16px;
+}
+
+.slot-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.slot-row:last-child {
+  border-bottom: none;
+}
+
+.slot-row--highlight {
+  background-color: rgba(79, 195, 247, 0.05);
+  margin: 0 -12px;
+  padding: 8px 12px;
+  border-radius: 4px;
+}
+
+.slot-label {
+  font-size: 0.8125rem;
+  color: var(--color-text-muted);
+}
+
+.slot-value {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text);
+  font-family: 'Fira Code', 'Cascadia Code', monospace;
+}
+
+.slot-value--available {
+  color: #66bb6a;
+  font-size: 1.125rem;
+}
+
+/* ─── Slot Meter ───────────────────────────────────────────────────────── */
+
+.slot-meter {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.slot-meter-bar-container {
+  width: 100%;
+  height: 12px;
+  background-color: var(--color-bg);
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+}
+
+.slot-meter-bar-fill {
+  height: 100%;
+  border-radius: 6px;
+  transition: width 0.3s ease;
+  background-color: var(--color-primary);
+}
+
+.slot-meter-bar-fill--warning {
+  background-color: #ffca28;
+}
+
+.slot-meter-bar-fill--critical {
+  background-color: #ef5350;
+}
+
+.slot-meter-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8125rem;
+  color: var(--color-text-muted);
+}
+
+.slot-meter-labels span:first-child {
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+/* ─── Performance Metrics ──────────────────────────────────────────────── */
+
+.performance-metrics {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.metric-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.metric-row:last-child {
+  border-bottom: none;
+}
+
+.metric-label {
+  font-size: 0.8125rem;
+  color: var(--color-text-muted);
+}
+
+.metric-value {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text);
+  font-family: 'Fira Code', 'Cascadia Code', monospace;
+}
+
+.metric-value--placeholder {
+  color: var(--color-text-muted);
+  font-style: italic;
+  font-weight: 400;
+}
+
+.performance-note {
+  margin: 16px 0 0;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+/* ─── Positions Table ──────────────────────────────────────────────────── */
+
+.positions-table-wrapper,
+.monthly-table-wrapper {
+  overflow-x: auto;
+}
+
+.positions-table,
+.monthly-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8125rem;
+}
+
+.positions-table th,
+.monthly-table th {
+  text-align: left;
+  padding: 8px 10px;
+  color: var(--color-text-muted);
+  font-weight: 600;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  border-bottom: 1px solid var(--color-border);
+  white-space: nowrap;
+}
+
+.positions-table td,
+.monthly-table td {
+  padding: 10px 10px;
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text);
+  white-space: nowrap;
+}
+
+.positions-table tr:last-child td,
+.monthly-table tr:last-child td {
+  border-bottom: none;
+}
+
+.positions-table tr:hover,
+.monthly-table tr:hover {
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+/* Monthly table specifics */
+.month-cell {
+  font-weight: 600;
+}
+
+.monthly-total-row {
+  border-top: 2px solid var(--color-border);
+  background-color: rgba(79, 195, 247, 0.03);
+}
+
+.monthly-total-row td {
+  padding-top: 12px;
+  border-bottom: none;
+}
+
+.monthly-table tfoot {
+  font-size: 0.8125rem;
+}
+
+/* DTE urgency */
+.dte--urgent {
+  color: #ef5350;
+  font-weight: 700;
+}
+
+.dte--warning {
+  color: #ffca28;
+  font-weight: 600;
+}
+
+/* Symbol cell */
+.symbol-cell {
+  font-weight: 600;
+  color: #4fc3f7;
+}
+
+/* Status badges */
+.status-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.status-badge--closed {
+  background: rgba(79, 195, 247, 0.15);
+  color: #4fc3f7;
+}
+
+.status-badge--expired {
+  background: rgba(102, 187, 106, 0.15);
+  color: #66bb6a;
+}
+
+.status-badge--assigned {
+  background: rgba(239, 83, 80, 0.15);
+  color: #ef5350;
+}
+
+.status-badge--open {
+  background: rgba(255, 202, 40, 0.15);
+  color: #ffca28;
+}
+
+/* ─── Responsive ───────────────────────────────────────────────────────── */
+
+@media (max-width: 900px) {
+  .pnl-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .trader-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .pnl-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .planning-layout {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+}
