@@ -1,20 +1,31 @@
-# Investment Workbook
+# SWAN Fund — Sleep Well At Night
 
-A personal investment tracking webapp with CSV import from Schwab/Robinhood, tax-lot accounting (FIFO), options trading analytics, trade capacity management, market color regime system, and 6 dashboards.
+A personal investment tracking webapp: SPX credit spread trading engine, dividend portfolio operating system, CSV import from Schwab/Robinhood, tax-lot accounting (FIFO), and 7 dashboards.
 
-## Quick Start (Local Development)
+---
 
-### Prerequisites
+## 🚀 Start the App (Local Development)
 
-- **Node.js** (v20+) — installed at `C:\Program Files\nodejs\`
-- **PocketBase** — already extracted to `pocketbase/server/pocketbase.exe`
+You need **2 terminals** open side by side. Copy/paste the commands below.
 
-### Step 1: Start PocketBase
+### Prerequisites (one-time setup)
 
-Open a terminal (Command Prompt or PowerShell) and run:
+- **Node.js v20+** — [download](https://nodejs.org/)
+- **Git** — [download](https://git-scm.com/download/win)
+- **PocketBase** — already included in `pocketbase/server/` (extract the zip if `pocketbase.exe` doesn't exist)
 
-```cmd
-cd C:\Users\Millennium-Falcon\Desktop\Kiro\pocketbase\server
+If Node.js or Git aren't in your PATH, use full paths:
+```
+Node: "C:\Program Files\nodejs\npm.cmd"
+Git:  "C:\Program Files\Git\bin\git.exe"
+```
+
+---
+
+### Terminal 1 — Start PocketBase (Backend)
+
+```powershell
+cd C:\Users\X-Wing\Desktop\Kiro\SWAN_Fund-main\pocketbase\server
 .\pocketbase.exe serve
 ```
 
@@ -25,14 +36,14 @@ Server started at http://127.0.0.1:8090
 └─ Dashboard: http://127.0.0.1:8090/_/
 ```
 
-**Leave this terminal open.** PocketBase must be running for the app to work.
+**Leave this terminal open.** Don't close it.
 
-### Step 2: Start the App
+---
 
-Open a **second** terminal and run:
+### Terminal 2 — Start the App (Frontend)
 
-```cmd
-cd C:\Users\Millennium-Falcon\Desktop\Kiro
+```powershell
+cd C:\Users\X-Wing\Desktop\Kiro\SWAN_Fund-main
 npm run dev
 ```
 
@@ -42,16 +53,101 @@ VITE v6.4.3  ready in ~200ms
 ➜  Local:   http://localhost:5173/
 ```
 
-### Step 3: Open in Browser
+**Leave this terminal open too.**
+
+---
+
+### Open in Browser
 
 Go to **http://localhost:5173/** in Chrome.
 
-### Step 4: Log In
+---
 
-- **Email:** user@example.com
-- **Password:** password123456
+### Log In
 
-You'll land on the Accounting Dashboard.
+| | |
+|---|---|
+| **Email** | user@example.com |
+| **Password** | password123456 |
+
+---
+
+### First-Time PocketBase Setup
+
+If this is a fresh install (no existing `pb_data/` folder), you need to set up the database:
+
+1. Open **http://127.0.0.1:8090/_/** in browser
+2. Create an admin account: `admin@investmentworkbook.local` / `admin123456`
+3. Create a `users` collection (type: Auth)
+4. Add a record: email `user@example.com`, password `password123456`
+
+Now the app login will work.
+
+---
+
+### Stopping the App
+
+1. Press `Ctrl+C` in Terminal 2 (stops frontend)
+2. Press `Ctrl+C` in Terminal 1 (stops backend)
+
+Your data persists in `pocketbase/server/pb_data/`.
+
+---
+
+## 🌐 Live Website (Future — Netlify + PocketHost)
+
+When deployed, no terminals needed. Just open the URL.
+
+| Environment | Frontend | Backend |
+|---|---|---|
+| **Local Dev** | http://localhost:5173 | http://127.0.0.1:8090 |
+| **Production** | https://swan-fund.netlify.app *(TBD)* | https://swan-fund.pockethost.io *(TBD)* |
+
+### Deploy Frontend (Netlify)
+
+1. Connect GitHub repo to Netlify
+2. Build command: `npm run build`
+3. Publish directory: `dist`
+4. Set env variable: `VITE_POCKETBASE_URL=https://your-instance.pockethost.io`
+
+### Deploy Backend (PocketHost)
+
+1. Create account at [pockethost.io](https://pockethost.io)
+2. Create instance (free tier works)
+3. Import schema from `pocketbase/migrations/pb_schema.json`
+4. Create users and seed data
+
+---
+
+## 📊 Dashboards
+
+| Tab | What It Does |
+|-----|-------------|
+| **Full Portfolio** | Positions per account, cost basis, market value, P/E, 52W, dividend yield |
+| **Trader** | SPX credit spread engine — VIX conditions, pattern signals, DTE ladder, position alerts, 7 rules |
+| **Dividends** | Quality scoring, income smoothing (calendar groups), capital allocation, growth forecast, FI score |
+| **Retirement** | IRA contributions, remaining room, years-to-retirement |
+| **Tax** | Short/long-term gains, wash sales, TLH opportunities |
+| **Risk** | Concentration risk, max drawdown, flagged positions |
+| **Import** | Drag/drop CSV/XLSX from Schwab or Robinhood |
+
+---
+
+## 🔧 Git Workflow
+
+```powershell
+# Check status
+& "C:\Program Files\Git\bin\git.exe" status
+
+# Stage all changes
+& "C:\Program Files\Git\bin\git.exe" add -A
+
+# Commit
+& "C:\Program Files\Git\bin\git.exe" commit -m "your message here"
+
+# Push to GitHub
+& "C:\Program Files\Git\bin\git.exe" push
+```
 
 ---
 
@@ -59,18 +155,12 @@ You'll land on the Accounting Dashboard.
 
 ### Importing Transactions
 
-1. Navigate to the **Import** page (sidebar → 📥 Import)
-2. Drag and drop a CSV or XLSX file from Schwab or Robinhood onto the drop zone
-3. The system will:
-   - Detect the broker format automatically
-   - Parse and normalize all records
-   - Skip duplicates (same file won't import twice)
-   - Pair DRIP dividends with reinvestments
-   - Create tax lots for purchases
-   - Download a JSON backup automatically
-4. You'll see a summary showing new/duplicate/error counts
+1. Navigate to **Import** (sidebar → 📥)
+2. Drag and drop a CSV or XLSX file onto the drop zone
+3. The system auto-detects broker format, deduplicates, pairs DRIPs, creates tax lots, and downloads a backup
+4. Summary shows new/duplicate/error counts
 
-### Supported CSV Formats
+### Supported Formats
 
 | Broker | Account Type | Key Headers |
 |--------|-------------|-------------|
@@ -78,42 +168,12 @@ You'll land on the Accounting Dashboard.
 | Schwab | Roth IRA | Action, Symbol (no Fees & Comm) |
 | Robinhood | Traditional IRA | Trans Code, Instrument, Activity Date |
 
-### Accounts (Import Order)
-
-1. **Schwab Spreads** (Taxable) — ...0626
-2. **Robinhood** (Traditional IRA) — ...0002
-3. **Schwab Roth IRA** — ...0212
-4. **Schwab Traditional IRA** — ...0617
-
-### Dashboards
-
-- **Accounting** — Positions per account (color-coded), cost basis, market value, unrealized G/L, P/E, 52W High/Low (color-coded), dividend yield, ex-div date, net worth breakdown
-- **Trader** — SPX trade planning (52W range, strike targets 10-15% below market), options P&L (max loss exposure, unrealized, realized, total premium), slot management, performance metrics (win rate, avg days held, capital efficiency), closed trade history with assignment detection
-- **Retirement** — IRA contribution tracking (Roth/Traditional), remaining room, monthly deposits, years-to-retirement warnings
-- **Income** — Dividend/options/interest income by period (MTD/QTD/YTD/12M), hourly equivalents (40hr work week + 24/7), monthly dividend breakdown table
-- **Tax** — Short/long-term gains, dividends, wash sales, TLH opportunities
-- **Risk** — Concentration risk, max drawdown, flagged positions
-
-### Settings
-
-Navigate to **Settings** (sidebar → ⚙️) to configure:
-- Market color thresholds (VIX levels, SPX conditions)
-- Trade capacity (total slots, spread width, DTE minimum)
-- Tax rates (marginal, long-term, short-term)
-- Display preferences
-- Import settings
-- Risk thresholds
-
 ### PocketBase Admin
 
-Access the admin panel at **http://127.0.0.1:8090/_/** to:
-- View/edit raw data in any collection
-- Manage users
-- Export/import data
+Access **http://127.0.0.1:8090/_/** to view/edit raw data, manage users, export/import.
 
-**Admin login:**
-- Email: admin@investmentworkbook.local
-- Password: admin123456
+- Email: `admin@investmentworkbook.local`
+- Password: `admin123456`
 
 ---
 
@@ -121,45 +181,37 @@ Access the admin panel at **http://127.0.0.1:8090/_/** to:
 
 | Data | Source | Cache |
 |------|--------|-------|
-| Stock prices (VGT, ADM, etc.) | Alpha Vantage GLOBAL_QUOTE → Yahoo Finance fallback | 24 hours in memory |
-| Fundamentals (P/E, 52W, div yield) | Alpha Vantage OVERVIEW | 24 hours in localStorage |
-| SPX price + 52W range | Yahoo Finance (^GSPC) via CORS proxy | 24 hours in memory |
-| Schwab positions/quotes (planned) | Schwab Developer API (OAuth2) | — |
-
----
-
-## Stopping the App
-
-1. Press `Ctrl+C` in the Vite terminal (stops the frontend)
-2. Press `Ctrl+C` in the PocketBase terminal (stops the backend)
-
-Your data persists in `pocketbase/server/pb_data/` — it'll be there next time you start PocketBase.
+| Stock prices | Alpha Vantage → Yahoo Finance fallback | 24 hours |
+| Fundamentals (P/E, 52W, div yield) | Alpha Vantage OVERVIEW | 24 hours |
+| SPX + VIX (trading engine) | Yahoo Finance via CORS proxy | 24 hours |
 
 ---
 
 ## Project Structure
 
 ```
-├── src/                    # React frontend source
-│   ├── components/         # Reusable UI components
-│   ├── contexts/           # React context (auth)
-│   ├── hooks/              # Custom hooks (auth, market data)
-│   ├── lib/                # Business logic
-│   │   ├── dashboards/     # Dashboard data aggregation
-│   │   ├── import/         # CSV import pipeline (parse, normalize, dedup, import)
-│   │   ├── market/         # Stock prices + fundamentals (Alpha Vantage, Yahoo)
-│   │   ├── options/        # Options tracking + accounting (spread detection, P&L)
-│   │   ├── taxLots/        # Tax-lot accounting engine (FIFO)
-│   │   └── tradeCapacity/  # Slot management
-│   ├── pages/              # Dashboard page components
-│   └── types/              # TypeScript type definitions
+├── src/
+│   ├── components/            # UI components
+│   ├── contexts/              # Auth context
+│   ├── hooks/                 # Custom hooks
+│   ├── lib/
+│   │   ├── dashboards/        # Dashboard aggregation
+│   │   ├── dividendEngine/    # Dividend OS v6 (quality, smoothing, allocation, forecast, FI)
+│   │   ├── import/            # CSV import pipeline
+│   │   ├── market/            # Stock prices + fundamentals
+│   │   ├── options/           # Options tracking + accounting
+│   │   ├── taxLots/           # Tax-lot engine (FIFO)
+│   │   ├── tradeCapacity/     # Slot management
+│   │   └── tradingEngine/     # SPX trading engine (signals, conditions, alerts, DTE ladder)
+│   ├── pages/                 # Dashboard pages
+│   └── types/                 # TypeScript types
 ├── pocketbase/
-│   ├── server/             # PocketBase binary + data
-│   ├── migrations/         # Schema definition (pb_schema.json)
-│   └── seeds/              # Seed data (settings, accounts)
-├── .env                    # Environment variables (local)
-├── netlify.toml            # Netlify deployment config
-└── package.json            # Dependencies and scripts
+│   ├── server/                # PocketBase binary + data
+│   ├── migrations/            # Schema (pb_schema.json)
+│   └── seeds/                 # Seed data
+├── .env                       # Environment variables
+├── netlify.toml               # Netlify config
+└── package.json               # Dependencies
 ```
 
 ---
@@ -168,24 +220,24 @@ Your data persists in `pocketbase/server/pb_data/` — it'll be there next time 
 
 | Command | Description |
 |---------|-------------|
-| `npm run dev` | Start Vite dev server (http://localhost:5173) |
+| `npm run dev` | Start dev server (http://localhost:5173) |
 | `npm run build` | TypeScript check + production build |
-| `npm run test` | Run all 358 tests |
-| `npm run lint` | Run ESLint |
-| `npm run format` | Format with Prettier |
+| `npm run test` | Run all tests |
+| `npm run lint` | ESLint |
+| `npm run format` | Prettier |
 
 ---
 
 ## Troubleshooting
 
 **"npm is not recognized"**
-→ Make sure Node.js is installed and in your PATH. Try running from Command Prompt instead of PowerShell.
+→ Node.js isn't in PATH. Use full path: `& "C:\Program Files\nodejs\npm.cmd" run dev`
 
 **App shows "Loading..." forever**
-→ Make sure PocketBase is running in a separate terminal (`.\pocketbase.exe serve`).
+→ PocketBase isn't running. Start it in Terminal 1.
 
 **Login fails**
-→ Verify PocketBase has the users collection with the test user. Check the admin panel at http://127.0.0.1:8090/_/
+→ Fresh PocketBase needs the `users` collection + test user created (see First-Time Setup above).
 
-**CSV import shows "FormatDetectionError"**
-→ The file headers don't match any known broker format. Check that you're using an unmodified export from Schwab or Robinhood.
+**"git is not recognized"**
+→ Use full path: `& "C:\Program Files\Git\bin\git.exe" status`
