@@ -4,6 +4,7 @@ import AppShell from '@/components/layout/AppShell';
 import LoginForm from '@/components/auth/LoginForm';
 import AccountingPage from '@/pages/AccountingPage';
 import TraderPage from '@/pages/TraderPage';
+import DividendPage from '@/pages/DividendPage';
 import RetirementPage from '@/pages/RetirementPage';
 import IncomePage from '@/pages/IncomePage';
 import TaxPage from '@/pages/TaxPage';
@@ -32,6 +33,7 @@ function AuthenticatedApp() {
         <Route index element={<Navigate to="/accounting" replace />} />
         <Route path="accounting" element={<AccountingPage />} />
         <Route path="trader" element={<TraderPage />} />
+        <Route path="dividends" element={<DividendPage />} />
         <Route path="retirement" element={<RetirementPage />} />
         <Route path="income" element={<IncomePage />} />
         <Route path="tax" element={<TaxPage />} />

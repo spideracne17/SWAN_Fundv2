@@ -1,0 +1,49 @@
+.dividend-page { max-width: 100%; }
+.dividend-subtitle { color: var(--color-text-muted); font-size: 0.8125rem; margin: -4px 0 20px; }
+
+/* Summary */
+.dividend-summary { display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; }
+.dividend-summary-card { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 8px; padding: 12px 16px; display: flex; flex-direction: column; gap: 2px; min-width: 120px; }
+.dividend-summary-label { font-size: 0.625rem; text-transform: uppercase; color: var(--color-text-muted); letter-spacing: 0.3px; font-weight: 600; }
+.dividend-summary-value { font-size: 1.125rem; font-weight: 700; font-family: 'Fira Code','Cascadia Code',monospace; color: var(--color-text); }
+.dividend-summary-value--green { color: #66bb6a; }
+
+/* Table */
+.dividend-table-wrapper { overflow-x: auto; margin-bottom: 24px; }
+.dividend-table { width: 100%; border-collapse: collapse; font-size: 0.75rem; }
+.dividend-table th { text-align: left; padding: 6px 8px; font-size: 0.625rem; font-weight: 700; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.3px; border-bottom: 1px solid var(--color-border); white-space: normal; cursor: help; }
+.dividend-table th.numeric { text-align: right; }
+.dividend-table td { padding: 8px 8px; border-bottom: 1px solid var(--color-border); color: var(--color-text); }
+.dividend-table td.numeric { text-align: right; font-family: 'Fira Code','Cascadia Code',monospace; font-size: 0.6875rem; }
+.dividend-table tr:hover { background: rgba(255,255,255,0.02); }
+
+/* Tooltip icon on headers */
+.th-content { display: flex; align-items: center; gap: 4px; }
+.th-tooltip-icon { display: inline-flex; align-items: center; justify-content: center; width: 13px; height: 13px; border-radius: 50%; background: rgba(79,195,247,0.15); color: #4fc3f7; font-size: 0.5rem; font-weight: 700; flex-shrink: 0; }
+
+/* Rating badge */
+.rating-badge { padding: 2px 8px; border-radius: 4px; font-size: 0.5625rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; white-space: nowrap; }
+
+/* Symbol */
+.symbol-cell { font-weight: 700; color: #4fc3f7; }
+
+/* Calendar group badges */
+.group-badge { display: inline-block; padding: 1px 6px; border-radius: 3px; font-size: 0.5625rem; font-weight: 700; }
+.group-badge--a { background: rgba(79,195,247,0.15); color: #4fc3f7; }
+.group-badge--b { background: rgba(102,187,106,0.15); color: #66bb6a; }
+.group-badge--c { background: rgba(206,147,216,0.15); color: #ce93d8; }
+
+/* Calendar section */
+.dividend-calendar { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 8px; padding: 20px 24px; }
+.dividend-calendar h3 { margin: 0 0 16px; font-size: 0.875rem; font-weight: 600; }
+.dividend-calendar-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.calendar-group-card { border: 1px solid; border-radius: 8px; padding: 12px 16px; display: flex; flex-direction: column; gap: 6px; }
+.calendar-group-label { font-size: 0.75rem; font-weight: 700; }
+.calendar-group-months { font-size: 0.625rem; color: var(--color-text-muted); }
+.calendar-group-stocks { display: flex; flex-wrap: wrap; gap: 4px; }
+.calendar-stock-chip { background: rgba(255,255,255,0.05); padding: 2px 8px; border-radius: 3px; font-size: 0.625rem; font-weight: 600; color: var(--color-text); }
+
+@media (max-width: 768px) {
+  .dividend-calendar-grid { grid-template-columns: 1fr; }
+  .dividend-summary { flex-direction: column; }
+}

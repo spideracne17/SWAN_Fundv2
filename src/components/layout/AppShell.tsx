@@ -4,8 +4,9 @@ import { NavLink, Outlet } from 'react-router-dom';
 const navItems = [
   { to: '/accounting', label: 'Full Portfolio', icon: '📊' },
   { to: '/trader', label: 'Trader', icon: '📈' },
+  { to: '/dividends', label: 'Dividends', icon: '💎' },
   { to: '/retirement', label: 'Retirement', icon: '🏦' },
-  { to: '/income', label: 'Dividends', icon: '💰' },
+  { to: '/income', label: 'Income', icon: '💰' },
   { to: '/tax', label: 'Tax', icon: '📋' },
   { to: '/import', label: 'Import', icon: '📥' },
   { to: '/settings', label: 'Settings', icon: '⚙️' },
