@@ -3,6 +3,7 @@ import { usePageTitle } from '@/hooks/usePageTitle';
 import { TARGET_PORTFOLIO, DIVIDEND_SETTINGS } from '@/lib/dividendEngine/sampleData';
 import { calculateQualityScore, type QualityScore, type DividendStockData } from '@/lib/dividendEngine/qualityScoring';
 import { fetchIncomeData, calculateHourlyEquivalents, type TimePeriod, type IncomeDashboardData } from '@/lib/dashboards/income';
+import { fetchStockPrices } from '@/lib/market/fetchStockPrices';
 import './DividendPage.css';
 
 /* ─── Tooltip Column Definitions ───────────────────────────────────────── */
@@ -92,6 +93,7 @@ function DividendPage() {
   // Actual income from PocketBase
   const [period, setPeriod] = useState<TimePeriod>('ytd');
   const [incomeData, setIncomeData] = useState<IncomeDashboardData | null>(null);
+  const [prices, setPrices] = useState<Map<string, number>>(new Map());
 
   const loadIncome = useCallback(async (p: TimePeriod) => {
     const data = await fetchIncomeData(p);
@@ -99,6 +101,12 @@ function DividendPage() {
   }, []);
 
   useEffect(() => { loadIncome(period); }, [period, loadIncome]);
+
+  // Fetch live prices for all target stocks
+  useEffect(() => {
+    const symbols = TARGET_PORTFOLIO.map(s => s.symbol);
+    fetchStockPrices(symbols).then(setPrices);
+  }, []);
 
   const hourly = incomeData ? calculateHourlyEquivalents(incomeData.total_income) : null;
 
@@ -145,6 +153,7 @@ function DividendPage() {
               <Th tooltip={COLUMN_TOOLTIPS.rating}>Rating</Th>
               <Th tooltip={COLUMN_TOOLTIPS.symbol}>Symbol</Th>
               <Th tooltip={COLUMN_TOOLTIPS.group}>Group</Th>
+              <Th tooltip="Current stock price (from Yahoo Finance)" numeric>Price</Th>
               <Th tooltip={COLUMN_TOOLTIPS.yield} numeric>Yield</Th>
               <Th tooltip={COLUMN_TOOLTIPS.relYield} numeric>Rel. Yield</Th>
               <Th tooltip={COLUMN_TOOLTIPS.chowder} numeric>Chowder #</Th>
@@ -161,7 +170,7 @@ function DividendPage() {
           </thead>
           <tbody>
             {scoredStocks.map(({ stock, score }) => (
-              <StockRow key={stock.symbol} stock={stock} score={score} />
+              <StockRow key={stock.symbol} stock={stock} score={score} price={prices.get(stock.symbol)} />
             ))}
           </tbody>
         </table>
@@ -276,9 +285,9 @@ function Th({ children, tooltip, numeric }: { children: React.ReactNode; tooltip
   );
 }
 
-function StockRow({ stock, score }: { stock: DividendStockData; score: QualityScore }) {
+function StockRow({ stock, score, price }: { stock: DividendStockData; score: QualityScore; price?: number }) {
   const annualIncome = stock.sharesHeld * stock.annualDividendPerShare;
-  const relYieldDisplay = score.relativeYield / 100; // Convert from % to multiplier
+  const relYieldDisplay = score.relativeYield / 100;
 
   return (
     <tr>
@@ -289,6 +298,7 @@ function StockRow({ stock, score }: { stock: DividendStockData; score: QualitySc
       </td>
       <td className="symbol-cell">{stock.symbol}</td>
       <td><span className={`group-badge group-badge--${stock.calendarGroup.toLowerCase()}`}>{stock.calendarGroup}</span></td>
+      <td className="numeric">{price ? `$${price.toFixed(2)}` : '—'}</td>
       <td className="numeric">{stock.currentYield.toFixed(1)}%</td>
       <td className="numeric" style={{ color: getRelYieldColor(score.relativeYield) }}>
         {relYieldDisplay.toFixed(2)}x
