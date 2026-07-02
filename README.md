@@ -175,8 +175,47 @@ When deployed, no terminals needed. Just open the URL.
 | **Dividends** | Quality scoring, income smoothing (calendar groups), capital allocation, growth forecast, FI score |
 | **Retirement** | IRA contributions, remaining room, years-to-retirement |
 | **Tax** | Short/long-term gains, wash sales, TLH opportunities |
-| **Risk** | Concentration risk, max drawdown, flagged positions |
 | **Import** | Drag/drop CSV/XLSX from Schwab or Robinhood |
+
+---
+
+## 💎 Dividend Portfolio OS v6 — Strategy
+
+**Goal**: Build a concentrated portfolio of 10-15 high-quality dividend stocks that compound income for early retirement.
+
+### Selection Criteria
+
+- Source pool: **Dividend Kings** (50+ years of increases) and **Dividend Aristocrats** (25+ years)
+- Target: **10-15 stocks maximum** — concentrated, not diversified across 100+ names
+- Quality over quantity — fewer positions means better monitoring and higher conviction
+
+### Quality Scoring (built into the app)
+
+Each stock is scored on:
+- Dividend growth rate (consecutive years of increases)
+- Payout ratio safety
+- Revenue/earnings stability
+- Debt levels
+- Yield attractiveness vs. history
+
+### Income Smoothing
+
+Stocks are grouped by **ex-dividend month** to ensure income arrives every month:
+- Group A (Jan/Apr/Jul/Oct): e.g., KO, MCD
+- Group B (Feb/May/Aug/Nov): e.g., ADM, HRL
+- Group C (Mar/Jun/Sep/Dec): e.g., KMB, NEE
+
+### Capital Allocation
+
+New money goes to the position with:
+1. Highest quality score that is also
+2. Below target weight (equal weight across positions)
+3. At an attractive price (% from 52W high/low, P/E color coding)
+
+### The "Sleep Well At Night" Test
+
+Every position must pass: *"If this stock dropped 30% tomorrow, would I buy more?"*
+If the answer is no → it shouldn't be in the portfolio.
 
 ---
 
