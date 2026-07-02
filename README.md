@@ -25,6 +25,11 @@ Git:  "C:\Program Files\Git\bin\git.exe"
 ### Terminal 1 — Start PocketBase (Backend)
 
 ```powershell
+# On PC (Millennium-Falcon):
+cd C:\Users\Millennium-Falcon\Desktop\Kiro\pocketbase\server
+.\pocketbase.exe serve
+
+# On Laptop (X-Wing):
 cd C:\Users\X-Wing\Desktop\Kiro\SWAN_Fund-main\pocketbase\server
 .\pocketbase.exe serve
 ```
@@ -43,6 +48,11 @@ Server started at http://127.0.0.1:8090
 ### Terminal 2 — Start the App (Frontend)
 
 ```powershell
+# On PC (Millennium-Falcon):
+cd C:\Users\Millennium-Falcon\Desktop\Kiro
+npm run dev
+
+# On Laptop (X-Wing):
 cd C:\Users\X-Wing\Desktop\Kiro\SWAN_Fund-main
 npm run dev
 ```
@@ -90,7 +100,44 @@ Now the app login will work.
 1. Press `Ctrl+C` in Terminal 2 (stops frontend)
 2. Press `Ctrl+C` in Terminal 1 (stops backend)
 
-Your data persists in `pocketbase/server/pb_data/`.
+Your data persists in `pocketbase/server/pb_data/data.db`.
+
+---
+
+## 💾 Multi-Machine Database Sync
+
+The PocketBase database (`pocketbase/server/pb_data/data.db`) contains all your financial data. To sync between machines:
+
+### Before switching machines
+
+```powershell
+# 1. Stop PocketBase (Ctrl+C in Terminal 1)
+# 2. Commit and push the database
+& "C:\Program Files\Git\bin\git.exe" add -A
+& "C:\Program Files\Git\bin\git.exe" commit -m "sync db"
+& "C:\Program Files\Git\bin\git.exe" push
+```
+
+### On the other machine
+
+```powershell
+& "C:\Program Files\Git\bin\git.exe" pull
+# Then start PocketBase + dev server as normal
+```
+
+### Rules
+
+- **Always stop PocketBase before committing** — SQLite corrupts if copied while running
+- **Always pull before starting work** — ensures latest database
+- **Commit after imports** — so new transactions sync
+- The `.db-shm` and `.db-wal` temp files are gitignored (they merge on clean shutdown)
+
+### First-time on a new machine
+
+If `pocketbase/server/pb_data/data.db` doesn't exist after cloning:
+1. Extract `pocketbase.zip` → get `pocketbase.exe`
+2. Create folder `pocketbase/server/pb_data/`
+3. Copy `data.db` from your other machine (or follow First-Time PocketBase Setup below)
 
 ---
 
@@ -181,9 +228,10 @@ Access **http://127.0.0.1:8090/_/** to view/edit raw data, manage users, export/
 
 | Data | Source | Cache |
 |------|--------|-------|
-| Stock prices | Alpha Vantage → Yahoo Finance fallback | 24 hours |
-| Fundamentals (P/E, 52W, div yield) | Alpha Vantage OVERVIEW | 24 hours |
-| SPX + VIX (trading engine) | Yahoo Finance via CORS proxy | 24 hours |
+| Stock prices | Yahoo Finance (primary) → Alpha Vantage (fallback) | 24 hours in localStorage |
+| Fundamentals (P/E, 52W, div yield) | Yahoo (ETFs) / Alpha Vantage (stocks) | 7 days in localStorage |
+| SPX + VIX (trading engine) | Yahoo Finance via CORS proxy | 24 hours in localStorage |
+| Schwab API (planned) | OAuth2 — positions, quotes, delta | — |
 
 ---
 
