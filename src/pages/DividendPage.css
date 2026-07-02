@@ -73,3 +73,9 @@
 
 /* Calendar group income */
 .calendar-group-income { font-size: 0.875rem; font-weight: 700; font-family: 'Fira Code','Cascadia Code',monospace; color: #66bb6a; }
+
+/* Group divider line between A/B/C */
+.dividend-table tr.group-divider td {
+  border-top: 2px solid rgba(79, 195, 247, 0.4);
+  padding-top: 10px;
+}

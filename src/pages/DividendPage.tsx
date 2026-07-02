@@ -169,9 +169,13 @@ function DividendPage() {
             </tr>
           </thead>
           <tbody>
-            {scoredStocks.map(({ stock, score }) => (
-              <StockRow key={stock.symbol} stock={stock} score={score} price={prices.get(stock.symbol)} />
-            ))}
+            {scoredStocks.map(({ stock, score }, idx, arr) => {
+              const prevGroup = idx > 0 ? arr[idx - 1]!.stock.calendarGroup : null;
+              const isGroupBoundary = idx > 0 && stock.calendarGroup !== prevGroup;
+              return (
+                <StockRow key={stock.symbol} stock={stock} score={score} price={prices.get(stock.symbol)} isGroupBoundary={isGroupBoundary} />
+              );
+            })}
           </tbody>
         </table>
       </div>
@@ -285,12 +289,12 @@ function Th({ children, tooltip, numeric }: { children: React.ReactNode; tooltip
   );
 }
 
-function StockRow({ stock, score, price }: { stock: DividendStockData; score: QualityScore; price?: number }) {
+function StockRow({ stock, score, price, isGroupBoundary }: { stock: DividendStockData; score: QualityScore; price?: number; isGroupBoundary?: boolean }) {
   const annualIncome = stock.sharesHeld * stock.annualDividendPerShare;
   const relYieldDisplay = score.relativeYield / 100;
 
   return (
-    <tr>
+    <tr className={isGroupBoundary ? 'group-divider' : ''}>
       <td>
         <span className="rating-badge" style={{ backgroundColor: score.ratingColor + '22', color: score.ratingColor }}>
           {score.rating}
