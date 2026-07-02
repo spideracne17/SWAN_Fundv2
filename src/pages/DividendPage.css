@@ -59,3 +59,17 @@
 .dividend-income-card { display: flex; flex-direction: column; gap: 2px; padding: 12px; background: var(--color-bg); border-radius: 6px; border: 1px solid var(--color-border); }
 .dividend-income-label { font-size: 0.625rem; text-transform: uppercase; color: var(--color-text-muted); letter-spacing: 0.3px; font-weight: 600; }
 .dividend-income-value { font-size: 1rem; font-weight: 600; font-family: 'Fira Code','Cascadia Code',monospace; color: var(--color-text); }
+
+/* Where to Deploy */
+.dividend-deploy { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 8px; padding: 20px 24px; margin-bottom: 20px; }
+.dividend-deploy h3 { margin: 0 0 12px; font-size: 0.875rem; font-weight: 600; }
+.deploy-cards { display: flex; gap: 12px; flex-wrap: wrap; }
+.deploy-card { display: flex; flex-direction: column; gap: 4px; padding: 12px 16px; background: var(--color-bg); border: 1px solid var(--color-border); border-radius: 8px; min-width: 200px; flex: 1; position: relative; }
+.deploy-rank { position: absolute; top: 8px; right: 10px; font-size: 0.625rem; color: var(--color-text-muted); font-weight: 700; }
+.deploy-symbol { font-size: 1rem; font-weight: 700; color: #4fc3f7; }
+.deploy-name { font-size: 0.6875rem; color: var(--color-text-muted); }
+.deploy-reason { font-size: 0.625rem; color: var(--color-text-muted); }
+.deploy-badge { font-size: 0.625rem; font-weight: 700; text-transform: uppercase; }
+
+/* Calendar group income */
+.calendar-group-income { font-size: 0.875rem; font-weight: 700; font-family: 'Fira Code','Cascadia Code',monospace; color: #66bb6a; }

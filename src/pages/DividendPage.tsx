@@ -167,16 +167,52 @@ function DividendPage() {
         </table>
       </div>
 
+      {/* Where to Deploy Money */}
+      <div className="dividend-deploy">
+        <h3>💡 Where to Deploy This Month</h3>
+        {(() => {
+          // Find the stock with highest quality score that has the lowest weight
+          const withPositions = scoredStocks.filter(s => s.stock.sharesHeld > 0);
+          const withoutPositions = scoredStocks.filter(s => s.stock.sharesHeld === 0);
+          // Priority: stocks not yet owned (sorted by score), then underweight owned stocks
+          const recommendations = [
+            ...withoutPositions.slice(0, 3),
+            ...withPositions.slice(0, 2),
+          ].slice(0, 3);
+
+          return (
+            <div className="deploy-cards">
+              {recommendations.map(({ stock, score }, idx) => (
+                <div key={stock.symbol} className="deploy-card">
+                  <span className="deploy-rank">#{idx + 1}</span>
+                  <span className="deploy-symbol">{stock.symbol}</span>
+                  <span className="deploy-name">{stock.name}</span>
+                  <span className="deploy-reason">
+                    {stock.sharesHeld === 0 ? 'Not yet owned' : `Score: ${score.totalScore.toFixed(0)}`}
+                    {' • '}Yield: {stock.currentYield}%
+                    {' • '}Chowder: {score.chowderNumber.toFixed(1)}
+                  </span>
+                  <span className="deploy-badge" style={{ color: score.ratingColor }}>{score.rating}</span>
+                </div>
+              ))}
+            </div>
+          );
+        })()}
+      </div>
+
       {/* Calendar Groups Visual */}
       <div className="dividend-calendar">
         <h3>Income Calendar</h3>
         <div className="dividend-calendar-grid">
           <CalendarGroup label="Group A" months="Jan / Apr / Jul / Oct" color="#4fc3f7"
-            stocks={scoredStocks.filter(s => s.stock.calendarGroup === 'A').map(s => s.stock.symbol)} />
+            stocks={scoredStocks.filter(s => s.stock.calendarGroup === 'A').map(s => s.stock.symbol)}
+            income={scoredStocks.filter(s => s.stock.calendarGroup === 'A').reduce((sum, s) => sum + s.stock.sharesHeld * s.stock.annualDividendPerShare, 0)} />
           <CalendarGroup label="Group B" months="Feb / May / Aug / Nov" color="#66bb6a"
-            stocks={scoredStocks.filter(s => s.stock.calendarGroup === 'B').map(s => s.stock.symbol)} />
+            stocks={scoredStocks.filter(s => s.stock.calendarGroup === 'B').map(s => s.stock.symbol)}
+            income={scoredStocks.filter(s => s.stock.calendarGroup === 'B').reduce((sum, s) => sum + s.stock.sharesHeld * s.stock.annualDividendPerShare, 0)} />
           <CalendarGroup label="Group C" months="Mar / Jun / Sep / Dec" color="#ce93d8"
-            stocks={scoredStocks.filter(s => s.stock.calendarGroup === 'C').map(s => s.stock.symbol)} />
+            stocks={scoredStocks.filter(s => s.stock.calendarGroup === 'C').map(s => s.stock.symbol)}
+            income={scoredStocks.filter(s => s.stock.calendarGroup === 'C').reduce((sum, s) => sum + s.stock.sharesHeld * s.stock.annualDividendPerShare, 0)} />
         </div>
       </div>
 
@@ -285,11 +321,12 @@ function StockRow({ stock, score }: { stock: DividendStockData; score: QualitySc
   );
 }
 
-function CalendarGroup({ label, months, color, stocks }: { label: string; months: string; color: string; stocks: string[] }) {
+function CalendarGroup({ label, months, color, stocks, income }: { label: string; months: string; color: string; stocks: string[]; income: number }) {
   return (
     <div className="calendar-group-card" style={{ borderColor: color }}>
       <span className="calendar-group-label" style={{ color }}>{label}</span>
       <span className="calendar-group-months">{months}</span>
+      <span className="calendar-group-income">${income.toFixed(2)}/yr</span>
       <div className="calendar-group-stocks">
         {stocks.map((s) => <span key={s} className="calendar-stock-chip">{s}</span>)}
       </div>
