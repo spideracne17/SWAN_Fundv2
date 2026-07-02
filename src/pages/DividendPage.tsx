@@ -1,7 +1,8 @@
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect, useCallback } from 'react';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { TARGET_PORTFOLIO, DIVIDEND_SETTINGS } from '@/lib/dividendEngine/sampleData';
 import { calculateQualityScore, type QualityScore, type DividendStockData } from '@/lib/dividendEngine/qualityScoring';
+import { fetchIncomeData, calculateHourlyEquivalents, type TimePeriod, type IncomeDashboardData } from '@/lib/dashboards/income';
 import './DividendPage.css';
 
 /* ─── Tooltip Column Definitions ───────────────────────────────────────── */
@@ -88,6 +89,19 @@ function DividendPage() {
 
   const monthlyIncome = totalAnnualIncome / 12;
 
+  // Actual income from PocketBase
+  const [period, setPeriod] = useState<TimePeriod>('ytd');
+  const [incomeData, setIncomeData] = useState<IncomeDashboardData | null>(null);
+
+  const loadIncome = useCallback(async (p: TimePeriod) => {
+    const data = await fetchIncomeData(p);
+    setIncomeData(data);
+  }, []);
+
+  useEffect(() => { loadIncome(period); }, [period, loadIncome]);
+
+  const hourly = incomeData ? calculateHourlyEquivalents(incomeData.total_income) : null;
+
   return (
     <div className="page dividend-page">
       <h2>Dividend Portfolio</h2>
@@ -165,6 +179,50 @@ function DividendPage() {
             stocks={scoredStocks.filter(s => s.stock.calendarGroup === 'C').map(s => s.stock.symbol)} />
         </div>
       </div>
+
+      {/* Actual Income Earned */}
+      <div className="dividend-income-section">
+        <h3>Actual Income Earned</h3>
+        <div className="dividend-period-selector">
+          {(['mtd', 'qtd', 'ytd', 'trailing_12m'] as TimePeriod[]).map((p) => (
+            <button key={p} className={`dividend-period-btn ${period === p ? 'active' : ''}`} onClick={() => setPeriod(p)}>
+              {p === 'trailing_12m' ? '12M' : p.toUpperCase()}
+            </button>
+          ))}
+        </div>
+        {incomeData && (
+          <div className="dividend-income-grid">
+            <div className="dividend-income-card">
+              <span className="dividend-income-label">Dividends</span>
+              <span className="dividend-income-value" style={{ color: '#66bb6a' }}>${incomeData.dividend_income.toFixed(2)}</span>
+            </div>
+            <div className="dividend-income-card">
+              <span className="dividend-income-label">Options</span>
+              <span className="dividend-income-value" style={{ color: '#4fc3f7' }}>${incomeData.options_income.toFixed(2)}</span>
+            </div>
+            <div className="dividend-income-card">
+              <span className="dividend-income-label">Interest</span>
+              <span className="dividend-income-value">${incomeData.interest_income.toFixed(2)}</span>
+            </div>
+            <div className="dividend-income-card">
+              <span className="dividend-income-label">Total</span>
+              <span className="dividend-income-value" style={{ color: '#fff', fontWeight: 700 }}>${incomeData.total_income.toFixed(2)}</span>
+            </div>
+            {hourly && (
+              <>
+                <div className="dividend-income-card">
+                  <span className="dividend-income-label">$/hr (40hr week)</span>
+                  <span className="dividend-income-value">${hourly.hourly_40hr.toFixed(2)}</span>
+                </div>
+                <div className="dividend-income-card">
+                  <span className="dividend-income-label">$/hr (24/7)</span>
+                  <span className="dividend-income-value">${hourly.hourly_24hr.toFixed(4)}</span>
+                </div>
+              </>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -208,9 +266,10 @@ function StockRow({ stock, score }: { stock: DividendStockData; score: QualitySc
       <td className="numeric" style={{ color: getPEColor(stock.peRatio) }}>
         {stock.peRatio.toFixed(1)}
       </td>
-      <td className="numeric">{stock.priceVs52WeekHigh}%</td>
-      <td className="numeric" style={{ color: stock.priceVs52WeekHigh > 15 ? '#66bb6a' : 'var(--color-text-muted)' }}>
-        {/* % above low = estimated as inverse relationship */}
+      <td className="numeric" style={{ color: stock.priceVs52WeekHigh >= 20 ? '#34a853' : stock.priceVs52WeekHigh >= 15 ? '#57bb8a' : stock.priceVs52WeekHigh >= 10 ? '#f4b400' : '#ea4335' }}>
+        {stock.priceVs52WeekHigh}%
+      </td>
+      <td className="numeric" style={{ color: (() => { const aboveLow = Math.max(0, 100 - stock.priceVs52WeekHigh * 2); return aboveLow <= 10 ? '#34a853' : aboveLow <= 30 ? '#57bb8a' : aboveLow <= 50 ? '#f4b400' : '#ea4335'; })() }}>
         {Math.max(0, 100 - stock.priceVs52WeekHigh * 2).toFixed(0)}%
       </td>
       <td className="numeric" style={{ color: getPayoutColor(stock.payoutRatio) }}>

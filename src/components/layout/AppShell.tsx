@@ -6,7 +6,6 @@ const navItems = [
   { to: '/trader', label: 'Trader', icon: '📈' },
   { to: '/dividends', label: 'Dividends', icon: '💎' },
   { to: '/retirement', label: 'Retirement', icon: '🏦' },
-  { to: '/income', label: 'Income', icon: '💰' },
   { to: '/tax', label: 'Tax', icon: '📋' },
   { to: '/import', label: 'Import', icon: '📥' },
   { to: '/settings', label: 'Settings', icon: '⚙️' },
