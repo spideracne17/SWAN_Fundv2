@@ -16,7 +16,8 @@ const COLUMN_TOOLTIPS: Record<string, string> = {
   chowder: 'Chowder Number = Current Yield + 5yr Dividend Growth Rate. Higher = better total return from dividends. For <3% yield stocks, target ≥15. For 3-5% yield, target ≥12.',
   growth: '5-Year Dividend Growth Rate — how fast the company is increasing its dividend each year.',
   pe: 'Price-to-Earnings ratio. Lower = cheaper. <14 great, 14-18 good, 18-30 fair, >30 expensive.',
-  pos52w: '52-Week Position — how far below the 52-week high (%). Higher = stock is cheaper vs recent range.',
+  belowHigh: '% below 52-week high. Higher = stock is cheaper vs recent peak. 20%+ = significant discount.',
+  aboveLow: '% above 52-week low. Lower = stock is near its cheapest recent price. 0% = at the low.',
   payout: 'Payout Ratio — % of earnings paid as dividends. <60% is safe. >80% may indicate risk of a cut.',
   score: 'Quality Score (0-100) — weighted composite of all factors. Determines Buy/Watch/Pass rating.',
   rating: 'Rating based on Quality Score. Strong Buy ≥90, Buy ≥80, Watch ≥70, Pass <70.',
@@ -73,7 +74,12 @@ function DividendPage() {
     return TARGET_PORTFOLIO.map((stock) => ({
       stock,
       score: calculateQualityScore(stock),
-    })).sort((a, b) => b.score.totalScore - a.score.totalScore);
+    })).sort((a, b) => {
+      // Sort by calendar group first (A, B, C), then by score within group
+      const groupOrder = a.stock.calendarGroup.localeCompare(b.stock.calendarGroup);
+      if (groupOrder !== 0) return groupOrder;
+      return b.score.totalScore - a.score.totalScore;
+    });
   }, []);
 
   const totalAnnualIncome = scoredStocks.reduce((sum, { stock }) => {
@@ -130,7 +136,8 @@ function DividendPage() {
               <Th tooltip={COLUMN_TOOLTIPS.chowder} numeric>Chowder #</Th>
               <Th tooltip={COLUMN_TOOLTIPS.growth} numeric>Growth</Th>
               <Th tooltip={COLUMN_TOOLTIPS.pe} numeric>P/E</Th>
-              <Th tooltip={COLUMN_TOOLTIPS.pos52w} numeric>52W Pos</Th>
+              <Th tooltip={COLUMN_TOOLTIPS.belowHigh} numeric>% Below High</Th>
+              <Th tooltip={COLUMN_TOOLTIPS.aboveLow} numeric>% Above Low</Th>
               <Th tooltip={COLUMN_TOOLTIPS.payout} numeric>Payout</Th>
               <Th tooltip={COLUMN_TOOLTIPS.score} numeric>Score</Th>
               <Th tooltip={COLUMN_TOOLTIPS.king}>King/Arist</Th>
@@ -202,6 +209,10 @@ function StockRow({ stock, score }: { stock: DividendStockData; score: QualitySc
         {stock.peRatio.toFixed(1)}
       </td>
       <td className="numeric">{stock.priceVs52WeekHigh}%</td>
+      <td className="numeric" style={{ color: stock.priceVs52WeekHigh > 15 ? '#66bb6a' : 'var(--color-text-muted)' }}>
+        {/* % above low = estimated as inverse relationship */}
+        {Math.max(0, 100 - stock.priceVs52WeekHigh * 2).toFixed(0)}%
+      </td>
       <td className="numeric" style={{ color: getPayoutColor(stock.payoutRatio) }}>
         {stock.payoutRatio}%
       </td>
