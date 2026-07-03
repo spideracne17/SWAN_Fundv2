@@ -13,6 +13,7 @@ import {
   type AllocationResult,
 } from '@/lib/dividendEngine';
 import { SAMPLE_HOLDINGS, SAMPLE_SETTINGS } from '@/lib/dividendEngine/sampleData';
+import { loadLocalSettings, saveLocalSetting } from '@/lib/dividendEngine/localSettings';
 import './IncomePage.css';
 
 function fmt(n: number): string {
@@ -27,8 +28,9 @@ type DividendTab = 'scoring' | 'smoothing' | 'allocation' | 'forecast' | 'retire
 function IncomePage() {
   usePageTitle('Dividend Portfolio OS');
   const [activeTab, setActiveTab] = useState<DividendTab>('scoring');
-  const [annualExpenses, setAnnualExpenses] = useState(SAMPLE_SETTINGS.annualExpenses);
-  const [monthlyContribution, setMonthlyContribution] = useState(SAMPLE_SETTINGS.monthlyContribution);
+  const localSettings = loadLocalSettings();
+  const [annualExpenses, setAnnualExpenses] = useState(localSettings.annualExpenses);
+  const [monthlyContribution, setMonthlyContribution] = useState(localSettings.monthlyContribution);
 
   // Calculate all engines from sample data
   const qualityScores: QualityScore[] = useMemo(
@@ -135,9 +137,9 @@ function IncomePage() {
         <RetirementPanel
           result={retirement}
           annualExpenses={annualExpenses}
-          onExpensesChange={setAnnualExpenses}
+          onExpensesChange={(v) => { setAnnualExpenses(v); saveLocalSetting('annualExpenses', v); }}
           monthlyContribution={monthlyContribution}
-          onContributionChange={setMonthlyContribution}
+          onContributionChange={(v) => { setMonthlyContribution(v); saveLocalSetting('monthlyContribution', v); }}
         />
       )}
     </div>
