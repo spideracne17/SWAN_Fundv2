@@ -1,7 +1,7 @@
 import { useMemo, useState, useEffect, useCallback } from 'react';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { TARGET_PORTFOLIO, DIVIDEND_SETTINGS } from '@/lib/dividendEngine/sampleData';
-import { loadLocalSettings, saveLocalSetting } from '@/lib/dividendEngine/localSettings';
+import { loadLocalSettings } from '@/lib/dividendEngine/localSettings';
 import { calculateQualityScore, type QualityScore, type DividendStockData } from '@/lib/dividendEngine/qualityScoring';
 import { fetchIncomeData, calculateHourlyEquivalents, type TimePeriod, type IncomeDashboardData } from '@/lib/dashboards/income';
 import { fetchStockPrices } from '@/lib/market/fetchStockPrices';
@@ -73,7 +73,7 @@ function getGrowthColor(growth: number): string {
 function DividendPage() {
   usePageTitle('Dividend Portfolio');
 
-  const [monthlyDeploy, setMonthlyDeploy] = useState(() => loadLocalSettings().monthlyContribution);
+  const monthlyDeploy = loadLocalSettings().monthlyContribution;
 
   const scoredStocks = useMemo(() => {
     return TARGET_PORTFOLIO.map((stock) => ({
@@ -142,20 +142,10 @@ function DividendPage() {
           <span className="dividend-summary-label">Avg Yield</span>
           <span className="dividend-summary-value">{DIVIDEND_SETTINGS.averageYield}%</span>
         </div>
-        <div className="dividend-summary-card dividend-summary-card--editable">
+        <div className="dividend-summary-card">
           <span className="dividend-summary-label">Monthly Deploy</span>
-          <input
-            type="number"
-            className="dividend-summary-input"
-            value={monthlyDeploy}
-            onChange={(e) => {
-              const val = Number(e.target.value);
-              setMonthlyDeploy(val);
-              saveLocalSetting('monthlyContribution', val);
-            }}
-            min={0}
-            step={50}
-          />
+          <span className="dividend-summary-value">${monthlyDeploy}</span>
+          <span className="dividend-summary-note">change in Settings</span>
         </div>
       </div>
 

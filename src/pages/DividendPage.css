@@ -7,9 +7,7 @@
 .dividend-summary-label { font-size: 0.625rem; text-transform: uppercase; color: var(--color-text-muted); letter-spacing: 0.3px; font-weight: 600; }
 .dividend-summary-value { font-size: 1.125rem; font-weight: 700; font-family: 'Fira Code','Cascadia Code',monospace; color: var(--color-text); }
 .dividend-summary-value--green { color: #66bb6a; }
-.dividend-summary-card--editable { position: relative; }
-.dividend-summary-input { width: 90px; padding: 4px 8px; border: 1px solid var(--color-border); border-radius: 4px; background: var(--color-bg); color: var(--color-text); font-size: 1rem; font-weight: 700; font-family: 'Fira Code','Cascadia Code',monospace; }
-.dividend-summary-input:focus { outline: none; border-color: var(--color-primary); }
+.dividend-summary-note { font-size: 0.5rem; color: var(--color-text-muted); font-style: italic; }
 
 /* Table */
 .dividend-table-wrapper { overflow-x: auto; margin-bottom: 24px; }

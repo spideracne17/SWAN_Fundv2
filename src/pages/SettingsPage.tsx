@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { fetchSettings, updateSetting } from '@/lib/settings';
+import { loadLocalSettings, saveLocalSetting, type DividendLocalSettings } from '@/lib/dividendEngine/localSettings';
 import type { SettingsRecord, SettingsCategory } from '@/types/database';
 import './SettingsPage.css';
 
@@ -214,6 +215,60 @@ function SettingsPage() {
             )}
           </div>
         </div>
+      </div>
+
+      {/* ─── Dividend Portfolio Settings (localStorage) ─── */}
+      <DividendSettingsPanel />
+    </div>
+  );
+}
+
+/* ─── Dividend Portfolio Settings ──────────────────────────────────────── */
+
+function DividendSettingsPanel() {
+  const [divSettings, setDivSettings] = useState<DividendLocalSettings>(loadLocalSettings);
+  const [saved, setSaved] = useState(false);
+
+  const handleChange = (key: keyof DividendLocalSettings, value: number) => {
+    setDivSettings((prev) => ({ ...prev, [key]: value }));
+    saveLocalSetting(key, value);
+    setSaved(true);
+    setTimeout(() => setSaved(false), 1500);
+  };
+
+  const fields: { key: keyof DividendLocalSettings; label: string; desc: string; step: number }[] = [
+    { key: 'monthlyContribution', label: 'Monthly Deploy', desc: 'How much new capital deployed each month into dividend stocks', step: 50 },
+    { key: 'annualExpenses', label: 'Annual Expenses', desc: 'Target annual living expenses for FI calculation', step: 1000 },
+    { key: 'averageYield', label: 'Average Yield (%)', desc: 'Blended portfolio yield target for projections', step: 0.1 },
+    { key: 'targetPositions', label: 'Target Positions', desc: 'Maximum number of stocks in dividend portfolio', step: 1 },
+    { key: 'maxSinglePosition', label: 'Max Single Position (%)', desc: 'Maximum weight for any one stock', step: 1 },
+  ];
+
+  return (
+    <div className="settings-dividend-section">
+      <h3>Dividend Portfolio Settings</h3>
+      <p className="settings-dividend-desc">These settings are stored locally and used by the Dividends dashboard.</p>
+      {saved && <span className="settings-dividend-saved">✓ Saved</span>}
+      <div className="settings-list">
+        {fields.map((f) => (
+          <div key={f.key} className="settings-item">
+            <div className="settings-item-info">
+              <label className="settings-item-key" htmlFor={`div-${f.key}`}>{f.label}</label>
+              <span className="settings-item-desc">{f.desc}</span>
+            </div>
+            <div className="settings-item-controls">
+              <input
+                id={`div-${f.key}`}
+                type="number"
+                className="settings-input"
+                value={divSettings[f.key]}
+                onChange={(e) => handleChange(f.key, Number(e.target.value))}
+                step={f.step}
+                min={0}
+              />
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
