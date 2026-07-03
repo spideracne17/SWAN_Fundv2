@@ -64,9 +64,14 @@
 /* Where to Deploy */
 .dividend-deploy { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 8px; padding: 20px 24px; margin-bottom: 20px; }
 .dividend-deploy h3 { margin: 0 0 12px; font-size: 0.875rem; font-weight: 600; }
+.deploy-amount-row { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; font-size: 0.75rem; color: var(--color-text-muted); }
+.deploy-amount-input { width: 110px; padding: 6px 10px; border: 1px solid var(--color-border); border-radius: 6px; background: var(--color-bg); color: var(--color-text); font-size: 1rem; font-weight: 700; font-family: 'Fira Code','Cascadia Code',monospace; }
+.deploy-amount-input:focus { outline: none; border-color: var(--color-primary); }
 .deploy-cards { display: flex; gap: 12px; flex-wrap: wrap; }
 .deploy-card { display: flex; flex-direction: column; gap: 4px; padding: 12px 16px; background: var(--color-bg); border: 1px solid var(--color-border); border-radius: 8px; min-width: 200px; flex: 1; position: relative; }
-.deploy-rank { position: absolute; top: 8px; right: 10px; font-size: 0.625rem; color: var(--color-text-muted); font-weight: 700; }
+.deploy-card-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px; }
+.deploy-pct { font-size: 0.875rem; font-weight: 800; color: #4fc3f7; }
+.deploy-dollars { font-size: 1.125rem; font-weight: 800; color: #66bb6a; font-family: 'Fira Code','Cascadia Code',monospace; }
 .deploy-symbol { font-size: 1rem; font-weight: 700; color: #4fc3f7; }
 .deploy-name { font-size: 0.6875rem; color: var(--color-text-muted); }
 .deploy-reason { font-size: 0.625rem; color: var(--color-text-muted); }

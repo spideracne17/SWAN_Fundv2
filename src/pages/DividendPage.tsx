@@ -74,6 +74,7 @@ function DividendPage() {
   usePageTitle('Dividend Portfolio');
 
   const monthlyDeploy = loadLocalSettings().monthlyContribution;
+  const [deployAmount, setDeployAmount] = useState(monthlyDeploy);
 
   const scoredStocks = useMemo(() => {
     return TARGET_PORTFOLIO.map((stock) => ({
@@ -187,31 +188,68 @@ function DividendPage() {
       {/* Where to Deploy Money */}
       <div className="dividend-deploy">
         <h3>💡 Where to Deploy This Month</h3>
+        <div className="deploy-amount-row">
+          <label htmlFor="deploy-amount">Amount to deploy:</label>
+          <input
+            id="deploy-amount"
+            type="number"
+            className="deploy-amount-input"
+            value={deployAmount}
+            onChange={(e) => setDeployAmount(Number(e.target.value))}
+            min={0}
+            step={100}
+          />
+        </div>
         {(() => {
-          // Find the stock with highest quality score that has the lowest weight
-          const withPositions = scoredStocks.filter(s => s.stock.sharesHeld > 0);
-          const withoutPositions = scoredStocks.filter(s => s.stock.sharesHeld === 0);
-          // Priority: stocks not yet owned (sorted by score), then underweight owned stocks
-          const recommendations = [
-            ...withoutPositions.slice(0, 3),
-            ...withPositions.slice(0, 2),
-          ].slice(0, 3);
+          // Calculate group income totals to find weakest group
+          const groupIncome: Record<string, number> = { A: 0, B: 0, C: 0 };
+          for (const { stock } of scoredStocks) {
+            groupIncome[stock.calendarGroup] += stock.sharesHeld * stock.annualDividendPerShare;
+          }
+          const weakestGroup = Object.entries(groupIncome).sort((a, b) => a[1] - b[1])[0]?.[0] ?? 'A';
+
+          // Score each stock for allocation priority
+          const candidates = scoredStocks
+            .filter(({ score }) => score.totalScore >= 70) // Watch or better
+            .map(({ stock, score }) => {
+              let priority = 0;
+              // Quality score weight
+              priority += score.totalScore >= 90 ? 40 : score.totalScore >= 80 ? 30 : 15;
+              // Weakest group bonus
+              if (stock.calendarGroup === weakestGroup) priority += 25;
+              // Undervalued bonus (relative yield > 110%)
+              if (score.relativeYield > 110) priority += 20;
+              // Not yet owned bonus
+              if (stock.sharesHeld === 0) priority += 15;
+              return { stock, score, priority };
+            })
+            .sort((a, b) => b.priority - a.priority)
+            .slice(0, 4);
+
+          const totalPriority = candidates.reduce((s, c) => s + c.priority, 0);
 
           return (
             <div className="deploy-cards">
-              {recommendations.map(({ stock, score }, idx) => (
-                <div key={stock.symbol} className="deploy-card">
-                  <span className="deploy-rank">#{idx + 1}</span>
-                  <span className="deploy-symbol">{stock.symbol}</span>
-                  <span className="deploy-name">{stock.name}</span>
-                  <span className="deploy-reason">
-                    {stock.sharesHeld === 0 ? 'Not yet owned' : `Score: ${score.totalScore.toFixed(0)}`}
-                    {' • '}Yield: {stock.currentYield}%
-                    {' • '}Chowder: {score.chowderNumber.toFixed(1)}
-                  </span>
-                  <span className="deploy-badge" style={{ color: score.ratingColor }}>{score.rating}</span>
-                </div>
-              ))}
+              {candidates.map(({ stock, score, priority }) => {
+                const pct = totalPriority > 0 ? priority / totalPriority : 0;
+                const dollars = deployAmount * pct;
+                return (
+                  <div key={stock.symbol} className="deploy-card">
+                    <div className="deploy-card-top">
+                      <span className="deploy-pct">{(pct * 100).toFixed(0)}%</span>
+                      <span className="deploy-dollars">${dollars.toFixed(0)}</span>
+                    </div>
+                    <span className="deploy-symbol">{stock.symbol}</span>
+                    <span className="deploy-name">{stock.name}</span>
+                    <span className="deploy-reason">
+                      {stock.calendarGroup === weakestGroup ? `Fills weak Grp ${weakestGroup}` : `Grp ${stock.calendarGroup}`}
+                      {score.relativeYield > 110 ? ' • Undervalued' : ''}
+                      {stock.sharesHeld === 0 ? ' • New position' : ''}
+                    </span>
+                    <span className="deploy-badge" style={{ color: score.ratingColor }}>{score.rating} ({score.totalScore.toFixed(0)})</span>
+                  </div>
+                );
+              })}
             </div>
           );
         })()}
