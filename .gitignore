@@ -28,9 +28,8 @@ dist-ssr
 .env.local
 .env.*.local
 
-# PocketBase binary and data (local dev only)
+# PocketBase binary (local dev only)
 pocketbase/server/pocketbase.exe
-pocketbase/server/pb_data/
 pocketbase/server/pb_migrations/
 
 # PocketBase zip download
