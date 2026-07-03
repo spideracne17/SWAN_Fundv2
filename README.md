@@ -14,6 +14,11 @@ You need **2 terminals** open side by side. Copy/paste the commands below.
 - **Git** — [download](https://git-scm.com/download/win)
 - **PocketBase** — already included in `pocketbase/server/` (extract the zip if `pocketbase.exe` doesn't exist)
 
+**PowerShell fix (run once):** If you get "running scripts is disabled" errors:
+```powershell
+Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
+```
+
 If Node.js or Git aren't in your PATH, use full paths:
 ```
 Node: "C:\Program Files\nodejs\npm.cmd"
