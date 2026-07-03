@@ -144,7 +144,7 @@ function DividendPage() {
           <span className="dividend-summary-value">{DIVIDEND_SETTINGS.averageYield}%</span>
         </div>
         <div className="dividend-summary-card">
-          <span className="dividend-summary-label">Monthly Deploy</span>
+          <span className="dividend-summary-label">Normal Monthly Contribution</span>
           <span className="dividend-summary-value">${monthlyDeploy}</span>
           <span className="dividend-summary-note">change in Settings</span>
         </div>
@@ -189,7 +189,7 @@ function DividendPage() {
       <div className="dividend-deploy">
         <h3>💡 Where to Deploy This Month</h3>
         <div className="deploy-amount-row">
-          <label htmlFor="deploy-amount">Amount to deploy:</label>
+          <label htmlFor="deploy-amount">Amount to deploy now:</label>
           <input
             id="deploy-amount"
             type="number"
