@@ -390,14 +390,58 @@ Access **http://127.0.0.1:8090/_/** to view/edit raw data, manage users, export/
 
 ---
 
-## Market Data Sources
+## 📡 Data Sources & API Hierarchy
 
-| Data | Source | Cache |
-|------|--------|-------|
-| Stock prices | Yahoo Finance (primary) → Alpha Vantage (fallback) | 24 hours in localStorage |
-| Fundamentals (P/E, 52W, div yield) | Yahoo (ETFs) / Alpha Vantage (stocks) | 7 days in localStorage |
-| SPX + VIX (trading engine) | Yahoo Finance via CORS proxy | 24 hours in localStorage |
-| Schwab API (planned) | OAuth2 — positions, quotes, delta | — |
+Data flows into the app from multiple sources. When the Schwab API is connected, it becomes the **primary source** for account/position data. Market data continues to come from Yahoo/Alpha Vantage.
+
+### Priority Order
+
+| Priority | Source | Data | Status |
+|---|---|---|---|
+| **1 (Future)** | **Charles Schwab API** | Account value, positions, quotes, Greeks, delta | ⏳ NOT YET CONNECTED |
+| **2** | Yahoo Finance | SPX/VIX prices, 50/200 DMA, 52W high/low, stock prices | ✅ Active (via corsproxy.io) |
+| **3** | Alpha Vantage | P/E, dividend yield, ex-div date, 52W (stocks) | ✅ Active (25 calls/day free) |
+| **4** | Custom Proxy (env var) | VIX, SPX, DMAs, IV rank (if `VITE_MARKET_DATA_URL` set) | ⚙️ Optional |
+
+### What Each Source Provides
+
+**Yahoo Finance** (primary market data — no daily limit via CORS proxy)
+- Trading Engine: SPX 1yr daily chart (200 DMA, 50 DMA, 52W range, 20-day ago)
+- Trading Engine: VIX 1yr daily chart (current, 5-day/20-day history, 30-day range)
+- Stock prices: current price, previous close, change % (for all holdings)
+- ETF fundamentals: 52W high/low, dividend yield (VGT, IVV, VOOG, SPY, QQQ, etc.)
+- Cache: 24 hours in localStorage
+
+**Alpha Vantage** (fallback for prices, primary for stock fundamentals)
+- OVERVIEW endpoint: P/E ratio, dividend yield, ex-dividend date, 52W high/low
+- GLOBAL_QUOTE endpoint: price fallback when Yahoo fails
+- Cache: 7 days in localStorage (fundamentals don't change daily)
+- Limit: 25 API calls/day on free tier — use sparingly
+- Env var: `VITE_ALPHA_VANTAGE_KEY`
+
+**Custom Market Data URL** (optional CORS proxy or serverless function)
+- Provides: VIX level, SPX price, SPX 50DMA, SPX 200DMA, IV rank
+- Polled every 60 seconds during US market hours only (Mon-Fri 9:30-4:00 ET)
+- Stops polling outside market hours automatically
+- Staleness threshold: 30 minutes
+- Env var: `VITE_MARKET_DATA_URL`
+
+### 🚨 TODO: When Schwab API Access Granted
+
+When you get Schwab Developer API access, update these files:
+
+1. **`src/pages/TraderPage.tsx`** — Replace `loadLocalSettings().spreadsAccountValue` with live account value from Schwab
+2. **`src/lib/market/fetchStockPrices.ts`** — Add Schwab quotes as Priority 1 (before Yahoo)
+3. **`src/pages/AccountingPage.tsx`** — Pull real positions/balances from Schwab instead of PocketBase tax lots
+4. **`src/components/trader/TradingEnginePanel.tsx`** — Get real delta values for open positions (currently placeholder)
+5. **Create new file: `src/lib/schwab/`** — OAuth2 flow, token refresh, position fetching, quote fetching
+
+**Schwab API will provide:**
+- Real-time account value (replaces manual Settings entry)
+- Live positions with cost basis, market value, unrealized P&L
+- Option Greeks (delta for the position management alerts)
+- Real-time quotes (replaces Yahoo Finance for owned positions)
+- Transaction history (could replace CSV import)
 
 ---
 
