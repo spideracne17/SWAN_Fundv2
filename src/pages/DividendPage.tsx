@@ -249,16 +249,37 @@ function DeployTab({ scoredStocks, deployAmount, setDeployAmount }: {
     .slice(0, 4);
 
   const totalPriority = candidates.reduce((s, c) => s + c.priority, 0);
+  const bestBuy = candidates[0]?.stock.symbol ?? '—';
+  const mostUndervalued = candidates.find(c => c.score.relativeYield > 110)?.stock.symbol ?? '—';
 
   return (
     <div className="div-panel">
-      <h3>💡 Where to Deploy This Month</h3>
+      <h3>Capital Allocation — Where Should My Next Dollar Go?</h3>
+
+      {/* Quick-glance KPI cards */}
+      <div className="div-alloc-kpis">
+        <div className="div-alloc-kpi-card">
+          <span className="div-alloc-kpi-label">Best Buy</span>
+          <span className="div-alloc-kpi-value">{bestBuy}</span>
+        </div>
+        <div className="div-alloc-kpi-card">
+          <span className="div-alloc-kpi-label">Most Undervalued</span>
+          <span className="div-alloc-kpi-value">{mostUndervalued}</span>
+        </div>
+        <div className="div-alloc-kpi-card">
+          <span className="div-alloc-kpi-label">Weakest Group</span>
+          <span className="div-alloc-kpi-value">Group {weakestGroup}</span>
+        </div>
+      </div>
+
+      {/* Deploy amount input */}
       <div className="deploy-amount-row">
         <label htmlFor="deploy-amount">Amount to deploy now:</label>
         <input id="deploy-amount" type="number" className="deploy-amount-input" value={deployAmount}
           onChange={(e) => setDeployAmount(Number(e.target.value))} min={0} step={100} />
       </div>
-      <p className="div-panel-desc">Weakest group: <strong>{weakestGroup}</strong> • Priority: Quality Score → Fill Weak Group → Undervalued → New Position</p>
+
+      {/* Allocation breakdown */}
       <div className="deploy-cards">
         {candidates.map(({ stock, score, priority }) => {
           const pct = totalPriority > 0 ? priority / totalPriority : 0;
