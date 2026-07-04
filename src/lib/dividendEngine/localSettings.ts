@@ -13,6 +13,8 @@ export interface DividendLocalSettings {
   averageYield: number;
   targetPositions: number;
   maxSinglePosition: number;
+  /** Schwab spreads account value — used for portfolio heat, slot calc */
+  spreadsAccountValue: number;
 }
 
 const DEFAULTS: DividendLocalSettings = {
@@ -21,6 +23,7 @@ const DEFAULTS: DividendLocalSettings = {
   averageYield: 3.2,
   targetPositions: 15,
   maxSinglePosition: 15,
+  spreadsAccountValue: 2800,
 };
 
 /**

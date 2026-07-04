@@ -237,6 +237,7 @@ function DividendSettingsPanel() {
   };
 
   const fields: { key: keyof DividendLocalSettings; label: string; desc: string; step: number }[] = [
+    { key: 'spreadsAccountValue', label: 'Spreads Account Value', desc: 'Schwab spreads account value — used for portfolio heat and slot calculations (will auto-populate from broker API when connected)', step: 100 },
     { key: 'monthlyContribution', label: 'Monthly Deploy', desc: 'How much new capital deployed each month into dividend stocks', step: 50 },
     { key: 'annualExpenses', label: 'Annual Expenses', desc: 'Target annual living expenses for FI calculation', step: 1000 },
     { key: 'averageYield', label: 'Average Yield (%)', desc: 'Blended portfolio yield target for projections', step: 0.1 },

@@ -5,12 +5,15 @@ import {
   type OptionsAccountingSummary,
   type SpreadTrade,
 } from '@/lib/options/optionsAccounting';
+import { loadLocalSettings } from '@/lib/dividendEngine/localSettings';
 import TradingEnginePanel from '@/components/trader/TradingEnginePanel';
 import './TraderPage.css';
 
 /* ─── Constants ────────────────────────────────────────────────────────── */
 
-const ACCOUNT_VALUE = 2800;
+// Account value: reads from Settings (localStorage). When broker API is
+// available, replace this with a live fetch and use localStorage as fallback.
+const ACCOUNT_VALUE = loadLocalSettings().spreadsAccountValue;
 const SPREAD_WIDTH_DOLLARS = 500; // 5-point spread × $100 multiplier
 const SCHWAB_SPREADS_ACCOUNT_ID = '7oq9h56iacbrxj3';
 const TOTAL_SLOTS = Math.floor(ACCOUNT_VALUE / SPREAD_WIDTH_DOLLARS);
