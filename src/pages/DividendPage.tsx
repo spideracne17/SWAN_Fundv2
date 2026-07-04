@@ -259,14 +259,17 @@ function DeployTab({ scoredStocks, deployAmount, setDeployAmount }: {
       {/* Quick-glance KPI cards */}
       <div className="div-alloc-kpis">
         <div className="div-alloc-kpi-card">
+          <span className="div-alloc-kpi-rank">1st</span>
           <span className="div-alloc-kpi-label">Best Buy</span>
           <span className="div-alloc-kpi-value">{bestBuy}</span>
         </div>
         <div className="div-alloc-kpi-card">
+          <span className="div-alloc-kpi-rank">2nd</span>
           <span className="div-alloc-kpi-label">Most Undervalued</span>
           <span className="div-alloc-kpi-value">{mostUndervalued}</span>
         </div>
         <div className="div-alloc-kpi-card">
+          <span className="div-alloc-kpi-rank">3rd</span>
           <span className="div-alloc-kpi-label">Weakest Group</span>
           <span className="div-alloc-kpi-value">Group {weakestGroup}</span>
         </div>

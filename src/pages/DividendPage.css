@@ -47,7 +47,6 @@
 @media (max-width: 768px) {
   .dividend-calendar-grid { grid-template-columns: 1fr; }
   .dividend-summary { grid-template-columns: repeat(2, 1fr); }
-  .div-alloc-kpis { grid-template-columns: 1fr; }
 }
 
 /* Actual Income Section */
@@ -65,10 +64,11 @@
 /* Where to Deploy / Capital Allocation */
 .dividend-deploy { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 8px; padding: 20px 24px; margin-bottom: 20px; }
 .dividend-deploy h3 { margin: 0 0 12px; font-size: 0.875rem; font-weight: 600; }
-.div-alloc-kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
-.div-alloc-kpi-card { background: var(--color-bg); border: 1px solid var(--color-border); border-radius: 8px; padding: 14px 18px; display: flex; flex-direction: column; gap: 4px; text-align: center; }
-.div-alloc-kpi-label { font-size: 0.5625rem; color: var(--color-text-muted); text-transform: uppercase; font-weight: 600; letter-spacing: 0.4px; }
-.div-alloc-kpi-value { font-size: 1.25rem; font-weight: 800; font-family: 'Fira Code','Cascadia Code',monospace; color: #4fc3f7; }
+.div-alloc-kpis { display: flex; justify-content: space-between; gap: 16px; margin-bottom: 20px; width: 100%; }
+.div-alloc-kpi-card { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; background: var(--color-bg); border: 1px solid var(--color-border); border-radius: 8px; padding: 16px 20px; text-align: center; }
+.div-alloc-kpi-rank { font-size: 0.875rem; font-weight: 900; color: #FFB800; }
+.div-alloc-kpi-label { font-size: 0.6875rem; color: var(--color-text-muted); text-transform: uppercase; font-weight: 600; letter-spacing: 0.4px; }
+.div-alloc-kpi-value { font-size: 1.5rem; font-weight: 800; font-family: 'Fira Code','Cascadia Code',monospace; color: #4fc3f7; }
 .deploy-amount-row { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; font-size: 0.75rem; color: var(--color-text-muted); }
 .deploy-amount-input { width: 110px; padding: 6px 10px; border: 1px solid var(--color-border); border-radius: 6px; background: var(--color-bg); color: var(--color-text); font-size: 1rem; font-weight: 700; font-family: 'Fira Code','Cascadia Code',monospace; }
 .deploy-amount-input:focus { outline: none; border-color: var(--color-primary); }
@@ -77,10 +77,10 @@
 .deploy-card-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px; }
 .deploy-pct { font-size: 0.875rem; font-weight: 800; color: #4fc3f7; }
 .deploy-dollars { font-size: 1.125rem; font-weight: 800; color: #66bb6a; font-family: 'Fira Code','Cascadia Code',monospace; }
-.deploy-symbol { font-size: 1rem; font-weight: 700; color: #4fc3f7; }
-.deploy-name { font-size: 0.6875rem; color: var(--color-text-muted); }
-.deploy-reason { font-size: 0.625rem; color: var(--color-text-muted); }
-.deploy-badge { font-size: 0.625rem; font-weight: 700; text-transform: uppercase; }
+.deploy-symbol { font-size: 1.25rem; font-weight: 700; color: #4fc3f7; }
+.deploy-name { font-size: 0.8125rem; color: var(--color-text-muted); }
+.deploy-reason { font-size: 0.8125rem; color: var(--color-text); font-weight: 500; }
+.deploy-badge { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; }
 
 /* Calendar group income */
 .calendar-group-income { font-size: 0.875rem; font-weight: 700; font-family: 'Fira Code','Cascadia Code',monospace; color: #66bb6a; }
