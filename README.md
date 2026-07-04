@@ -184,43 +184,165 @@ When deployed, no terminals needed. Just open the URL.
 
 ---
 
+## 📈 SPX Credit Spread Trading Engine — Strategy
+
+A systematic, rules-based SPX put credit spread strategy. Removes emotion from every decision — entry, management, and exit.
+
+### Market Condition System (VIX-Based)
+
+| Condition | VIX Level | Color | Meaning |
+|---|---|---|---|
+| **Green** | Below 20 | `#00C087` | Normal operations — full size |
+| **Yellow** | 20–25 | `#FFB800` | Caution — half size only, 90+120 DTE only |
+| **Red** | 25–35 | `#FF4444` | Stop — no new trades, manage existing |
+| **Black** | Above 35 | `#1A1A1A` | Emergency — close everything immediately |
+
+### VIX Trend Patterns (Entry Signals)
+
+| Pattern | Signal | When |
+|---|---|---|
+| **1 — Spiking** | Enter now | VIX > 20-day avg AND rising |
+| **2 — Fading** | Enter now | VIX > 20-day avg AND falling (best R/R) |
+| **3 — Elevated 3+ weeks** | Wait | Trending bear — don't enter |
+| **4 — Low/below avg** | Skip | No premium, no cushion |
+
+### Entry Rules
+
+All must be true: Green/Yellow condition + Pattern 1 or 2 + slots available + market pulled back.
+
+- Short strike: ~10% below current SPX
+- Delta: 10–20 (Green), 8–12 (Yellow)
+- Spread width: 5 points ($500 max risk per contract)
+- Cash reserved per slot: $500
+
+### DTE Ladder (Priority Order)
+
+| Priority | DTE | Notes |
+|---|---|---|
+| P1 | 90 | Always first — best premium/time balance |
+| P2 | 120 | Second — max buffer for slow recovery |
+| P3 | 60–70 | Only if VIX > 20, NEVER in Yellow |
+| P4 | 140–150 | Sparingly — delayed recovery scenarios |
+
+### Position Management (Hold / Roll / Close)
+
+| DTE | Drop | Condition | Action |
+|---|---|---|---|
+| Any | Any | Black (>35) | **CLOSE NOW** |
+| Any | >15% in <4 weeks | Any | **CLOSE NOW** |
+| <21 | Any | Any | **CLOSE** (time stop) |
+| 21–45 | <10% | Green/Yellow | HOLD |
+| 21–45 | 10–15% | Green/Yellow | ROLL (4–6 weeks out, lower strike) |
+| 21–45 | >15% | Any | CLOSE |
+| 45–60 | <15% | Green/Yellow | HOLD |
+| 60+ | <15% | Green/Yellow | HOLD |
+
+### 7 Non-Negotiable Rules
+
+1. Close at 50% profit
+2. Close at 21 DTE regardless
+3. Enter on dips only
+4. 90 DTE first, always
+5. No 60-day spreads in Yellow
+6. Half size in Yellow
+7. Black means close everything
+
+### Exit Rules
+
+- **Profit target:** Close at 50% of max premium collected
+- **Time stop:** Close at 21 DTE no matter what
+- **Loss limit:** Spread width minus premium = defined max loss (no stop-loss needed)
+
+### Trade Capacity
+
+- Max simultaneous positions: 10 slots
+- $500 reserved per slot
+- Max 30% of slots on single underlying
+- Avoid entries within 3 days of FOMC/CPI/NFP
+
+---
+
 ## 💎 Dividend Portfolio OS v6 — Strategy
 
-**Goal**: Build a concentrated portfolio of 10-15 high-quality dividend stocks that compound income for early retirement.
+**Goal**: Build a high-quality dividend portfolio focused on qualified dividends, Dividend Aristocrats/Kings, dividend growth, valuation discipline, monthly income smoothing, and retirement income readiness.
 
-### Selection Criteria
+### V1 — Quality Scoring Engine
 
-- Source pool: **Dividend Kings** (50+ years of increases) and **Dividend Aristocrats** (25+ years)
-- Target: **10-15 stocks maximum** — concentrated, not diversified across 100+ names
-- Quality over quantity — fewer positions means better monitoring and higher conviction
+Each stock scored 0–100 across 6 weighted factors:
 
-### Quality Scoring (built into the app)
+| Factor | Weight |
+|---|---:|
+| Chowder Rule (Yield + 5yr Growth) | 25% |
+| Yield vs 5-Year Average Yield | 25% |
+| Dividend Growth Rate | 20% |
+| P/E Valuation | 15% |
+| 52-Week Position (% below high) | 10% |
+| Payout Ratio | 5% |
 
-Each stock is scored on:
-- Dividend growth rate (consecutive years of increases)
-- Payout ratio safety
-- Revenue/earnings stability
-- Debt levels
-- Yield attractiveness vs. history
+**Ratings:** Strong Buy ≥90 • Buy ≥80 • Watch ≥70 • Pass <70
 
-### Income Smoothing
+**Eligible universe:** Dividend Kings, Dividend Aristocrats, investment-grade balance sheets, positive FCF, qualified dividends. Excludes most REITs, BDCs, MLPs.
 
-Stocks are grouped by **ex-dividend month** to ensure income arrives every month:
-- Group A (Jan/Apr/Jul/Oct): e.g., KO, MCD
-- Group B (Feb/May/Aug/Nov): e.g., ADM, HRL
-- Group C (Mar/Jun/Sep/Dec): e.g., KMB, NEE
+### V2 — Income Smoothing Engine
 
-### Capital Allocation
+Stocks grouped by payment schedule to ensure monthly income:
 
-New money goes to the position with:
-1. Highest quality score that is also
-2. Below target weight (equal weight across positions)
-3. At an attractive price (% from 52W high/low, P/E color coding)
+| Group | Months |
+|---|---|
+| **A** | Jan / Apr / Jul / Oct |
+| **B** | Feb / May / Aug / Nov |
+| **C** | Mar / Jun / Sep / Dec |
 
-### The "Sleep Well At Night" Test
+- Target: Annual Income ÷ 12 each month
+- Coverage Score: 0–100 (95+ = Excellent, 90–94 = Good, 80–89 = Acceptable)
+- Gap Analyzer identifies weakest month and capital needed to fill it
 
-Every position must pass: *"If this stock dropped 30% tomorrow, would I buy more?"*
-If the answer is no → it shouldn't be in the portfolio.
+### V3 — Portfolio Construction Rules
+
+| Rule | Target |
+|---|---:|
+| Minimum Quality Score | 80 |
+| Qualified Dividends | Required |
+| Monthly Coverage Score | >90 |
+| Single Position Maximum | 5% |
+| Sector Maximum | 20% |
+
+Priority: Quality → Dividend Safety → Growth → Valuation → Smoothing
+
+### V4 — Capital Allocation Engine
+
+Answers: **"Where should my next dollar go?"**
+
+Priority order:
+1. Quality Score ≥ 80 (Strong Buy / Buy only)
+2. Fill weakest income month (underweight calendar group)
+3. Buy undervalued holdings (relative yield > 110%)
+4. Maintain diversification (respect position/sector caps)
+
+Output: "Invest $X → 40% ABBV, 35% JNJ, 25% PEP" with dollar amounts.
+
+### V5 — Dividend Growth Forecast
+
+Projects future income at 1, 3, 5, 10, 20 years using three scenarios:
+- **Conservative:** 50% of historical growth rate
+- **Base Case:** Historical growth rate
+- **Optimistic:** 125% of historical growth rate
+
+Includes contribution impact (new money deployed monthly at average yield).
+
+### V6 — Retirement Income Readiness
+
+- **FI Score** = Annual Dividend Income ÷ Annual Expenses
+- Estimates years to Dividend Independence
+- User-editable Annual Expenses field (never hardcoded)
+
+| Coverage | Status |
+|---|---|
+| 25% | Early Stage |
+| 50% | Progressing |
+| 75% | Near Goal |
+| 100% | Financial Independence |
+| 125%+ | Excess Income |
 
 ---
 
