@@ -114,6 +114,7 @@ function SettingsPage() {
       <div className="page settings-page">
         <h2>Settings</h2>
         <div className="settings-loading">Loading settings…</div>
+        <DividendSettingsPanel />
       </div>
     );
   }
@@ -128,6 +129,7 @@ function SettingsPage() {
             Retry
           </button>
         </div>
+        <DividendSettingsPanel />
       </div>
     );
   }
