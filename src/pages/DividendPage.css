@@ -85,3 +85,79 @@
   border-top: 2px solid rgba(79, 195, 247, 0.4);
   padding-top: 10px;
 }
+
+/* ─── Sub-tabs ─── */
+.div-tabs { display: flex; gap: 0; border: 1px solid var(--color-border); border-radius: 8px; overflow: hidden; margin-bottom: 20px; }
+.div-tab { flex: 1; padding: 10px 12px; border: none; background: var(--color-surface); color: var(--color-text-muted); font-size: 0.75rem; font-weight: 500; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; border-right: 1px solid var(--color-border); transition: background 0.15s, color 0.15s; }
+.div-tab:last-child { border-right: none; }
+.div-tab:hover { background: var(--color-surface-hover); color: var(--color-text); }
+.div-tab--active { background: var(--color-active-bg, rgba(79,195,247,0.1)); color: #4fc3f7; font-weight: 700; }
+.div-tab-icon { font-size: 1rem; }
+.div-tab-label { font-size: 0.6875rem; }
+
+/* ─── Panel wrapper ─── */
+.div-panel { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 8px; padding: 20px 24px; }
+.div-panel h3 { margin: 0 0 8px; font-size: 1rem; font-weight: 700; }
+.div-panel-desc { font-size: 0.6875rem; color: var(--color-text-muted); margin: 0 0 16px; }
+
+/* ─── Smoothing KPIs ─── */
+.div-smooth-kpis { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+.div-smooth-kpi { flex: 1; min-width: 100px; background: var(--color-bg); border: 1px solid var(--color-border); border-radius: 6px; padding: 10px 14px; display: flex; flex-direction: column; gap: 2px; }
+.div-smooth-kpi-label { font-size: 0.5625rem; color: var(--color-text-muted); text-transform: uppercase; font-weight: 600; }
+.div-smooth-kpi-value { font-size: 1rem; font-weight: 700; font-family: 'Fira Code','Cascadia Code',monospace; color: var(--color-text); }
+
+/* ─── Monthly Bar Chart ─── */
+.div-month-chart { display: flex; gap: 6px; align-items: flex-end; height: 200px; margin: 16px 0; position: relative; padding-bottom: 40px; }
+.div-month-bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; height: 100%; justify-content: flex-end; }
+.div-month-amount { font-size: 0.5rem; color: var(--color-text-muted); font-family: 'Fira Code','Cascadia Code',monospace; margin-bottom: 4px; white-space: nowrap; }
+.div-month-bar-track { width: 100%; max-width: 40px; flex: 1; display: flex; align-items: flex-end; border-radius: 3px 3px 0 0; overflow: hidden; }
+.div-month-bar-fill { width: 100%; border-radius: 3px 3px 0 0; min-height: 2px; transition: height 0.3s; }
+.div-month-bar-fill--a { background: #4fc3f7; }
+.div-month-bar-fill--b { background: #66bb6a; }
+.div-month-bar-fill--c { background: #ce93d8; }
+.div-month-label { font-size: 0.625rem; font-weight: 600; color: var(--color-text-muted); margin-top: 6px; }
+.div-month-group { font-size: 0.5rem; color: var(--color-text-muted); }
+
+/* ─── Group Totals ─── */
+.div-group-totals { display: flex; gap: 16px; margin-top: 16px; }
+.div-group-item { display: flex; align-items: center; gap: 8px; font-size: 0.75rem; color: var(--color-text); }
+.div-group-badge { padding: 2px 8px; border-radius: 4px; font-size: 0.625rem; font-weight: 700; }
+.div-group-badge--a { background: rgba(79,195,247,0.15); color: #4fc3f7; }
+.div-group-badge--b { background: rgba(102,187,106,0.15); color: #66bb6a; }
+.div-group-badge--c { background: rgba(206,147,216,0.15); color: #ce93d8; }
+
+/* ─── Gap Analysis ─── */
+.div-gap-analysis { margin-top: 16px; padding: 12px 16px; background: rgba(255,184,0,0.05); border: 1px solid rgba(255,184,0,0.2); border-radius: 6px; }
+.div-gap-analysis h4 { margin: 0 0 6px; font-size: 0.75rem; color: #FFB800; }
+.div-gap-analysis p { margin: 4px 0; font-size: 0.6875rem; color: var(--color-text-muted); }
+
+/* ─── Forecast Table ─── */
+.div-forecast-table-wrap { overflow-x: auto; }
+.div-forecast-table { width: 100%; border-collapse: collapse; font-size: 0.75rem; }
+.div-forecast-table th { text-align: left; padding: 6px 12px; font-size: 0.625rem; font-weight: 700; color: var(--color-text-muted); text-transform: uppercase; border-bottom: 1px solid var(--color-border); }
+.div-forecast-table td { padding: 10px 12px; border-bottom: 1px solid var(--color-border); font-family: 'Fira Code','Cascadia Code',monospace; color: var(--color-text); }
+.div-forecast-period { font-weight: 700; }
+.div-forecast-base { color: #66bb6a; font-weight: 700; }
+.div-forecast-contrib { color: #4fc3f7; font-size: 0.6875rem; }
+
+/* ─── FI / Retirement ─── */
+.div-retire-inputs { display: flex; gap: 16px; margin-bottom: 20px; flex-wrap: wrap; }
+.div-retire-input-group { display: flex; flex-direction: column; gap: 4px; }
+.div-retire-input-group label { font-size: 0.625rem; color: var(--color-text-muted); font-weight: 600; text-transform: uppercase; }
+.div-retire-input-group input { padding: 8px 12px; border: 1px solid var(--color-border); border-radius: 6px; background: var(--color-bg); color: var(--color-text); font-size: 0.875rem; font-family: 'Fira Code','Cascadia Code',monospace; width: 160px; }
+.div-retire-input-group input:focus { outline: none; border-color: var(--color-primary); }
+.div-fi-hero { text-align: center; padding: 24px 0; }
+.div-fi-score { font-size: 3rem; font-weight: 900; font-family: 'Fira Code','Cascadia Code',monospace; }
+.div-fi-status { font-size: 1.125rem; font-weight: 700; margin-top: 4px; }
+.div-fi-years { font-size: 0.8125rem; color: var(--color-text-muted); margin-top: 8px; }
+.div-fi-years--achieved { color: #66bb6a; font-weight: 700; }
+.div-retire-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 16px; }
+.div-retire-metric { background: var(--color-bg); border: 1px solid var(--color-border); border-radius: 6px; padding: 10px 14px; display: flex; flex-direction: column; gap: 2px; }
+.div-retire-metric-label { font-size: 0.5625rem; color: var(--color-text-muted); text-transform: uppercase; font-weight: 600; }
+.div-retire-metric-value { font-size: 0.9375rem; font-weight: 700; font-family: 'Fira Code','Cascadia Code',monospace; color: var(--color-text); }
+
+@media (max-width: 768px) {
+  .div-tabs { flex-wrap: wrap; }
+  .div-retire-grid { grid-template-columns: repeat(2, 1fr); }
+  .div-month-chart { overflow-x: auto; min-width: 500px; }
+}

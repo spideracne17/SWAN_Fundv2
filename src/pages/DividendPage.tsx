@@ -3,33 +3,24 @@ import { usePageTitle } from '@/hooks/usePageTitle';
 import { TARGET_PORTFOLIO, DIVIDEND_SETTINGS } from '@/lib/dividendEngine/sampleData';
 import { loadLocalSettings } from '@/lib/dividendEngine/localSettings';
 import { calculateQualityScore, type QualityScore, type DividendStockData } from '@/lib/dividendEngine/qualityScoring';
-import { fetchIncomeData, calculateHourlyEquivalents, type TimePeriod, type IncomeDashboardData } from '@/lib/dashboards/income';
+import { calculateIncomeSmoothing, type IncomeSmoothingResult } from '@/lib/dividendEngine/incomeSmoothing';
+import { calculateGrowthForecast, type GrowthForecastResult } from '@/lib/dividendEngine/growthForecast';
+import { calculateRetirementReadiness, type RetirementReadinessResult } from '@/lib/dividendEngine/retirementReadiness';
 import { fetchStockPrices } from '@/lib/market/fetchStockPrices';
 import './DividendPage.css';
 
-/* ─── Tooltip Column Definitions ───────────────────────────────────────── */
+/* ─── Types ────────────────────────────────────────────────────────────── */
 
-const COLUMN_TOOLTIPS: Record<string, string> = {
-  symbol: 'Stock ticker symbol',
-  name: 'Company name',
-  group: 'Calendar Group — A (Jan/Apr/Jul/Oct), B (Feb/May/Aug/Nov), C (Mar/Jun/Sep/Dec). Ensures monthly income.',
-  yield: 'Current annual dividend yield (annual dividend / current price × 100)',
-  avgYield: '5-Year Average Yield — what this stock typically yields. Used to calculate Relative Yield.',
-  relYield: 'Relative Yield = Current Yield / 5yr Avg Yield. >1.0 means stock is cheap (yielding more than usual). <1.0 means expensive.',
-  chowder: 'Chowder Number = Current Yield + 5yr Dividend Growth Rate. Higher = better total return from dividends. For <3% yield stocks, target ≥15. For 3-5% yield, target ≥12.',
-  growth: '5-Year Dividend Growth Rate — how fast the company is increasing its dividend each year.',
-  pe: 'Price-to-Earnings ratio. Lower = cheaper. <14 great, 14-18 good, 18-30 fair, >30 expensive.',
-  belowHigh: '% below 52-week high. Higher = stock is cheaper vs recent peak. 20%+ = significant discount.',
-  aboveLow: '% above 52-week low. Lower = stock is near its cheapest recent price. 0% = at the low.',
-  payout: 'Payout Ratio — % of earnings paid as dividends. <60% is safe. >80% may indicate risk of a cut.',
-  score: 'Quality Score (0-100) — weighted composite of all factors. Determines Buy/Watch/Pass rating.',
-  rating: 'Rating based on Quality Score. Strong Buy ≥90, Buy ≥80, Watch ≥70, Pass <70.',
-  king: 'Dividend King (50+ years consecutive increases) or Aristocrat (25+ years).',
-  shares: 'Shares currently held in Robinhood account.',
-  annualIncome: 'Estimated annual dividend income from current shares.',
-};
+type DivTab = 'quality' | 'deploy' | 'income' | 'forecast' | 'fi';
 
-/* ─── Color Helpers ────────────────────────────────────────────────────── */
+/* ─── Helpers ──────────────────────────────────────────────────────────── */
+
+function fmt(n: number): string {
+  return n.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 });
+}
+function fmtDec(n: number): string {
+  return n.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
 
 function getChowderColor(chowder: number, currentYield: number): string {
   const threshold = currentYield >= 3 ? 12 : 15;
@@ -38,29 +29,24 @@ function getChowderColor(chowder: number, currentYield: number): string {
   if (chowder >= threshold - 4) return '#f4b400';
   return '#ea4335';
 }
-
 function getRelYieldColor(relYield: number): string {
-  // relYield is stored as percentage (100 = 1.0x)
   if (relYield >= 120) return '#34a853';
   if (relYield >= 100) return '#57bb8a';
   if (relYield >= 80) return '#f4b400';
   return '#ea4335';
 }
-
 function getPEColor(pe: number): string {
   if (pe <= 14) return '#34a853';
   if (pe <= 18) return '#57bb8a';
   if (pe <= 30) return '#f4b400';
   return '#ea4335';
 }
-
 function getPayoutColor(payout: number): string {
   if (payout <= 40) return '#34a853';
   if (payout <= 60) return '#57bb8a';
   if (payout <= 75) return '#f4b400';
   return '#ea4335';
 }
-
 function getGrowthColor(growth: number): string {
   if (growth >= 10) return '#34a853';
   if (growth >= 7) return '#57bb8a';
@@ -68,51 +54,64 @@ function getGrowthColor(growth: number): string {
   return '#ea4335';
 }
 
-/* ─── Component ────────────────────────────────────────────────────────── */
+/* ─── Main Component ───────────────────────────────────────────────────── */
 
 function DividendPage() {
   usePageTitle('Dividend Portfolio');
 
-  const monthlyDeploy = loadLocalSettings().monthlyContribution;
+  const localSettings = loadLocalSettings();
+  const monthlyDeploy = localSettings.monthlyContribution;
+  const [activeTab, setActiveTab] = useState<DivTab>('quality');
   const [deployAmount, setDeployAmount] = useState(monthlyDeploy);
+  const [annualExpenses, setAnnualExpenses] = useState(localSettings.annualExpenses);
+  const [prices, setPrices] = useState<Map<string, number>>(new Map());
 
   const scoredStocks = useMemo(() => {
     return TARGET_PORTFOLIO.map((stock) => ({
       stock,
       score: calculateQualityScore(stock),
     })).sort((a, b) => {
-      // Sort by calendar group first (A, B, C), then by score within group
       const groupOrder = a.stock.calendarGroup.localeCompare(b.stock.calendarGroup);
       if (groupOrder !== 0) return groupOrder;
       return b.score.totalScore - a.score.totalScore;
     });
   }, []);
 
-  const totalAnnualIncome = scoredStocks.reduce((sum, { stock }) => {
-    return sum + (stock.sharesHeld * stock.annualDividendPerShare);
-  }, 0);
-
+  const totalAnnualIncome = scoredStocks.reduce((sum, { stock }) =>
+    sum + (stock.sharesHeld * stock.annualDividendPerShare), 0);
   const monthlyIncome = totalAnnualIncome / 12;
+  const avgScore = scoredStocks.reduce((s, { score }) => s + score.totalScore, 0) / Math.max(scoredStocks.length, 1);
 
-  // Actual income from PocketBase
-  const [period, setPeriod] = useState<TimePeriod>('ytd');
-  const [incomeData, setIncomeData] = useState<IncomeDashboardData | null>(null);
-  const [prices, setPrices] = useState<Map<string, number>>(new Map());
+  const smoothing = useMemo(() => calculateIncomeSmoothing(TARGET_PORTFOLIO), []);
 
-  const loadIncome = useCallback(async (p: TimePeriod) => {
-    const data = await fetchIncomeData(p);
-    setIncomeData(data);
-  }, []);
+  const forecast = useMemo(() => calculateGrowthForecast({
+    currentAnnualIncome: totalAnnualIncome,
+    historicalGrowthRate: 7,
+    monthlyContribution: monthlyDeploy,
+    averageYield: DIVIDEND_SETTINGS.averageYield,
+    yearsToRetirement: 20,
+  }), [totalAnnualIncome, monthlyDeploy]);
 
-  useEffect(() => { loadIncome(period); }, [period, loadIncome]);
+  const retirement = useMemo(() => calculateRetirementReadiness({
+    annualDividendIncome: totalAnnualIncome,
+    annualExpenses,
+    monthlyContribution: monthlyDeploy,
+    averageYield: DIVIDEND_SETTINGS.averageYield,
+    dividendGrowthRate: 7,
+    qualifiedDividendPct: 85,
+  }), [totalAnnualIncome, annualExpenses, monthlyDeploy]);
 
-  // Fetch live prices for all target stocks
   useEffect(() => {
-    const symbols = TARGET_PORTFOLIO.map(s => s.symbol);
-    fetchStockPrices(symbols).then(setPrices);
+    fetchStockPrices(TARGET_PORTFOLIO.map(s => s.symbol)).then(setPrices);
   }, []);
 
-  const hourly = incomeData ? calculateHourlyEquivalents(incomeData.total_income) : null;
+  const tabs: { id: DivTab; label: string; icon: string }[] = [
+    { id: 'quality', label: 'Quality', icon: '⭐' },
+    { id: 'deploy', label: 'Deploy', icon: '🎯' },
+    { id: 'income', label: 'Income', icon: '📅' },
+    { id: 'forecast', label: 'Forecast', icon: '📈' },
+    { id: 'fi', label: 'FI Score', icon: '🏖️' },
+  ];
 
   return (
     <div className="page dividend-page">
@@ -121,270 +120,299 @@ function DividendPage() {
         {TARGET_PORTFOLIO.length} stocks • All qualified dividends • Dividend Kings & Aristocrats
       </p>
 
-      {/* Summary Cards */}
+      {/* KPI Summary */}
       <div className="dividend-summary">
         <div className="dividend-summary-card">
-          <span className="dividend-summary-label">Target Stocks</span>
-          <span className="dividend-summary-value">{DIVIDEND_SETTINGS.targetPositions}</span>
-        </div>
-        <div className="dividend-summary-card">
           <span className="dividend-summary-label">Annual Income</span>
-          <span className="dividend-summary-value dividend-summary-value--green">
-            ${totalAnnualIncome.toFixed(2)}
-          </span>
+          <span className="dividend-summary-value dividend-summary-value--green">{fmtDec(totalAnnualIncome)}</span>
         </div>
         <div className="dividend-summary-card">
           <span className="dividend-summary-label">Monthly Income</span>
-          <span className="dividend-summary-value dividend-summary-value--green">
-            ${monthlyIncome.toFixed(2)}
-          </span>
+          <span className="dividend-summary-value dividend-summary-value--green">{fmtDec(monthlyIncome)}</span>
         </div>
         <div className="dividend-summary-card">
-          <span className="dividend-summary-label">Avg Yield</span>
-          <span className="dividend-summary-value">{DIVIDEND_SETTINGS.averageYield}%</span>
+          <span className="dividend-summary-label">Avg Quality</span>
+          <span className="dividend-summary-value">{avgScore.toFixed(0)}</span>
         </div>
         <div className="dividend-summary-card">
-          <span className="dividend-summary-label">Normal Monthly Contribution</span>
+          <span className="dividend-summary-label">Coverage Score</span>
+          <span className="dividend-summary-value">{smoothing.coverageScore.toFixed(0)}</span>
+        </div>
+        <div className="dividend-summary-card">
+          <span className="dividend-summary-label">FI Score</span>
+          <span className="dividend-summary-value" style={{ color: retirement.fiStatusColor }}>{retirement.fiScore.toFixed(0)}%</span>
+        </div>
+        <div className="dividend-summary-card">
+          <span className="dividend-summary-label">Monthly Contribution</span>
           <span className="dividend-summary-value">${monthlyDeploy}</span>
           <span className="dividend-summary-note">change in Settings</span>
         </div>
       </div>
 
-      {/* Quality Table */}
-      <div className="dividend-table-wrapper">
-        <table className="dividend-table">
-          <thead>
-            <tr>
-              <Th tooltip={COLUMN_TOOLTIPS.rating}>Rating</Th>
-              <Th tooltip={COLUMN_TOOLTIPS.symbol}>Symbol</Th>
-              <Th tooltip={COLUMN_TOOLTIPS.group}>Group</Th>
-              <Th tooltip="Current stock price (from Yahoo Finance)" numeric>Price</Th>
-              <Th tooltip={COLUMN_TOOLTIPS.yield} numeric>Yield</Th>
-              <Th tooltip={COLUMN_TOOLTIPS.relYield} numeric>Rel. Yield</Th>
-              <Th tooltip={COLUMN_TOOLTIPS.chowder} numeric>Chowder #</Th>
-              <Th tooltip={COLUMN_TOOLTIPS.growth} numeric>Growth</Th>
-              <Th tooltip={COLUMN_TOOLTIPS.pe} numeric>P/E</Th>
-              <Th tooltip={COLUMN_TOOLTIPS.belowHigh} numeric>% Below High</Th>
-              <Th tooltip={COLUMN_TOOLTIPS.aboveLow} numeric>% Above Low</Th>
-              <Th tooltip={COLUMN_TOOLTIPS.payout} numeric>Payout</Th>
-              <Th tooltip={COLUMN_TOOLTIPS.score} numeric>Score</Th>
-              <Th tooltip={COLUMN_TOOLTIPS.king}>King/Arist</Th>
-              <Th tooltip={COLUMN_TOOLTIPS.shares} numeric>Shares</Th>
-              <Th tooltip={COLUMN_TOOLTIPS.annualIncome} numeric>Ann. Income</Th>
-            </tr>
-          </thead>
-          <tbody>
-            {scoredStocks.map(({ stock, score }, idx, arr) => {
-              const prevGroup = idx > 0 ? arr[idx - 1]!.stock.calendarGroup : null;
-              const isGroupBoundary = idx > 0 && stock.calendarGroup !== prevGroup;
-              return (
-                <StockRow key={stock.symbol} stock={stock} score={score} price={prices.get(stock.symbol)} isGroupBoundary={isGroupBoundary} />
-              );
-            })}
-          </tbody>
-        </table>
+      {/* Sub-tabs */}
+      <div className="div-tabs">
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            className={`div-tab ${activeTab === tab.id ? 'div-tab--active' : ''}`}
+            onClick={() => setActiveTab(tab.id)}
+          >
+            <span className="div-tab-icon">{tab.icon}</span>
+            <span className="div-tab-label">{tab.label}</span>
+          </button>
+        ))}
       </div>
 
-      {/* Where to Deploy Money */}
-      <div className="dividend-deploy">
-        <h3>💡 Where to Deploy This Month</h3>
-        <div className="deploy-amount-row">
-          <label htmlFor="deploy-amount">Amount to deploy now:</label>
-          <input
-            id="deploy-amount"
-            type="number"
-            className="deploy-amount-input"
-            value={deployAmount}
-            onChange={(e) => setDeployAmount(Number(e.target.value))}
-            min={0}
-            step={100}
-          />
-        </div>
-        {(() => {
-          // Calculate group income totals to find weakest group
-          const groupIncome: Record<string, number> = { A: 0, B: 0, C: 0 };
-          for (const { stock } of scoredStocks) {
-            groupIncome[stock.calendarGroup] += stock.sharesHeld * stock.annualDividendPerShare;
-          }
-          const weakestGroup = Object.entries(groupIncome).sort((a, b) => a[1] - b[1])[0]?.[0] ?? 'A';
+      {/* Tab Content */}
+      {activeTab === 'quality' && <QualityTab scoredStocks={scoredStocks} prices={prices} />}
+      {activeTab === 'deploy' && <DeployTab scoredStocks={scoredStocks} deployAmount={deployAmount} setDeployAmount={setDeployAmount} />}
+      {activeTab === 'income' && <IncomeTab smoothing={smoothing} />}
+      {activeTab === 'forecast' && <ForecastTab result={forecast} />}
+      {activeTab === 'fi' && <FITab result={retirement} annualExpenses={annualExpenses} setAnnualExpenses={setAnnualExpenses} />}
+    </div>
+  );
+}
 
-          // Score each stock for allocation priority
-          const candidates = scoredStocks
-            .filter(({ score }) => score.totalScore >= 70) // Watch or better
-            .map(({ stock, score }) => {
-              let priority = 0;
-              // Quality score weight
-              priority += score.totalScore >= 90 ? 40 : score.totalScore >= 80 ? 30 : 15;
-              // Weakest group bonus
-              if (stock.calendarGroup === weakestGroup) priority += 25;
-              // Undervalued bonus (relative yield > 110%)
-              if (score.relativeYield > 110) priority += 20;
-              // Not yet owned bonus
-              if (stock.sharesHeld === 0) priority += 15;
-              return { stock, score, priority };
-            })
-            .sort((a, b) => b.priority - a.priority)
-            .slice(0, 4);
+/* ─── Quality Tab ──────────────────────────────────────────────────────── */
 
-          const totalPriority = candidates.reduce((s, c) => s + c.priority, 0);
+function QualityTab({ scoredStocks, prices }: { scoredStocks: { stock: DividendStockData; score: QualityScore }[]; prices: Map<string, number> }) {
+  return (
+    <div className="dividend-table-wrapper">
+      <table className="dividend-table">
+        <thead>
+          <tr>
+            <th>Rating</th><th>Symbol</th><th>Group</th><th className="numeric">Price</th>
+            <th className="numeric">Yield</th><th className="numeric">Rel. Yield</th>
+            <th className="numeric">Chowder</th><th className="numeric">Growth</th>
+            <th className="numeric">P/E</th><th className="numeric">% Below High</th>
+            <th className="numeric">Payout</th><th className="numeric">Score</th>
+            <th>King/Arist</th><th className="numeric">Shares</th><th className="numeric">Ann. Income</th>
+          </tr>
+        </thead>
+        <tbody>
+          {scoredStocks.map(({ stock, score }, idx, arr) => {
+            const prevGroup = idx > 0 ? arr[idx - 1]!.stock.calendarGroup : null;
+            const isGroupBoundary = idx > 0 && stock.calendarGroup !== prevGroup;
+            const annualIncome = stock.sharesHeld * stock.annualDividendPerShare;
+            const relYield = score.relativeYield / 100;
+            const price = prices.get(stock.symbol);
+            return (
+              <tr key={stock.symbol} className={isGroupBoundary ? 'group-divider' : ''}>
+                <td><span className="rating-badge" style={{ backgroundColor: score.ratingColor + '22', color: score.ratingColor }}>{score.rating}</span></td>
+                <td className="symbol-cell">{stock.symbol}</td>
+                <td><span className={`group-badge group-badge--${stock.calendarGroup.toLowerCase()}`}>{stock.calendarGroup}</span></td>
+                <td className="numeric">{price ? `$${price.toFixed(2)}` : '—'}</td>
+                <td className="numeric">{stock.currentYield.toFixed(1)}%</td>
+                <td className="numeric" style={{ color: getRelYieldColor(score.relativeYield) }}>{relYield.toFixed(2)}x</td>
+                <td className="numeric" style={{ color: getChowderColor(score.chowderNumber, stock.currentYield), fontWeight: 700 }}>{score.chowderNumber.toFixed(1)}</td>
+                <td className="numeric" style={{ color: getGrowthColor(stock.dividendGrowthRate) }}>{stock.dividendGrowthRate.toFixed(1)}%</td>
+                <td className="numeric" style={{ color: getPEColor(stock.peRatio) }}>{stock.peRatio.toFixed(1)}</td>
+                <td className="numeric" style={{ color: stock.priceVs52WeekHigh >= 20 ? '#34a853' : stock.priceVs52WeekHigh >= 10 ? '#f4b400' : '#ea4335' }}>{stock.priceVs52WeekHigh}%</td>
+                <td className="numeric" style={{ color: getPayoutColor(stock.payoutRatio) }}>{stock.payoutRatio}%</td>
+                <td className="numeric" style={{ fontWeight: 700 }}>{score.totalScore.toFixed(0)}</td>
+                <td>{stock.isDividendKing ? '👑' : stock.isDividendAristocrat ? '🏆' : '—'}</td>
+                <td className="numeric">{stock.sharesHeld > 0 ? stock.sharesHeld.toFixed(2) : '—'}</td>
+                <td className="numeric" style={{ color: annualIncome > 0 ? '#66bb6a' : 'var(--color-text-muted)' }}>{annualIncome > 0 ? `$${annualIncome.toFixed(2)}` : '—'}</td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+}
 
+/* ─── Deploy Tab ───────────────────────────────────────────────────────── */
+
+function DeployTab({ scoredStocks, deployAmount, setDeployAmount }: {
+  scoredStocks: { stock: DividendStockData; score: QualityScore }[];
+  deployAmount: number;
+  setDeployAmount: (v: number) => void;
+}) {
+  const groupIncome: Record<string, number> = { A: 0, B: 0, C: 0 };
+  for (const { stock } of scoredStocks) {
+    groupIncome[stock.calendarGroup] += stock.sharesHeld * stock.annualDividendPerShare;
+  }
+  const weakestGroup = Object.entries(groupIncome).sort((a, b) => a[1] - b[1])[0]?.[0] ?? 'A';
+
+  const candidates = scoredStocks
+    .filter(({ score }) => score.totalScore >= 70)
+    .map(({ stock, score }) => {
+      let priority = 0;
+      priority += score.totalScore >= 90 ? 40 : score.totalScore >= 80 ? 30 : 15;
+      if (stock.calendarGroup === weakestGroup) priority += 25;
+      if (score.relativeYield > 110) priority += 20;
+      if (stock.sharesHeld === 0) priority += 15;
+      return { stock, score, priority };
+    })
+    .sort((a, b) => b.priority - a.priority)
+    .slice(0, 4);
+
+  const totalPriority = candidates.reduce((s, c) => s + c.priority, 0);
+
+  return (
+    <div className="div-panel">
+      <h3>💡 Where to Deploy This Month</h3>
+      <div className="deploy-amount-row">
+        <label htmlFor="deploy-amount">Amount to deploy now:</label>
+        <input id="deploy-amount" type="number" className="deploy-amount-input" value={deployAmount}
+          onChange={(e) => setDeployAmount(Number(e.target.value))} min={0} step={100} />
+      </div>
+      <p className="div-panel-desc">Weakest group: <strong>{weakestGroup}</strong> • Priority: Quality Score → Fill Weak Group → Undervalued → New Position</p>
+      <div className="deploy-cards">
+        {candidates.map(({ stock, score, priority }) => {
+          const pct = totalPriority > 0 ? priority / totalPriority : 0;
+          const dollars = deployAmount * pct;
           return (
-            <div className="deploy-cards">
-              {candidates.map(({ stock, score, priority }) => {
-                const pct = totalPriority > 0 ? priority / totalPriority : 0;
-                const dollars = deployAmount * pct;
-                return (
-                  <div key={stock.symbol} className="deploy-card">
-                    <div className="deploy-card-top">
-                      <span className="deploy-pct">{(pct * 100).toFixed(0)}%</span>
-                      <span className="deploy-dollars">${dollars.toFixed(0)}</span>
-                    </div>
-                    <span className="deploy-symbol">{stock.symbol}</span>
-                    <span className="deploy-name">{stock.name}</span>
-                    <span className="deploy-reason">
-                      {stock.calendarGroup === weakestGroup ? `Fills weak Grp ${weakestGroup}` : `Grp ${stock.calendarGroup}`}
-                      {score.relativeYield > 110 ? ' • Undervalued' : ''}
-                      {stock.sharesHeld === 0 ? ' • New position' : ''}
-                    </span>
-                    <span className="deploy-badge" style={{ color: score.ratingColor }}>{score.rating} ({score.totalScore.toFixed(0)})</span>
-                  </div>
-                );
-              })}
+            <div key={stock.symbol} className="deploy-card">
+              <div className="deploy-card-top">
+                <span className="deploy-pct">{(pct * 100).toFixed(0)}%</span>
+                <span className="deploy-dollars">${dollars.toFixed(0)}</span>
+              </div>
+              <span className="deploy-symbol">{stock.symbol}</span>
+              <span className="deploy-name">{stock.name}</span>
+              <span className="deploy-reason">
+                {stock.calendarGroup === weakestGroup ? `Fills weak Grp ${weakestGroup}` : `Grp ${stock.calendarGroup}`}
+                {score.relativeYield > 110 ? ' • Undervalued' : ''}
+                {stock.sharesHeld === 0 ? ' • New position' : ''}
+              </span>
+              <span className="deploy-badge" style={{ color: score.ratingColor }}>{score.rating} ({score.totalScore.toFixed(0)})</span>
             </div>
           );
-        })()}
-      </div>
-
-      {/* Calendar Groups Visual */}
-      <div className="dividend-calendar">
-        <h3>Income Calendar</h3>
-        <div className="dividend-calendar-grid">
-          <CalendarGroup label="Group A" months="Jan / Apr / Jul / Oct" color="#4fc3f7"
-            stocks={scoredStocks.filter(s => s.stock.calendarGroup === 'A').map(s => s.stock.symbol)}
-            income={scoredStocks.filter(s => s.stock.calendarGroup === 'A').reduce((sum, s) => sum + s.stock.sharesHeld * s.stock.annualDividendPerShare, 0)} />
-          <CalendarGroup label="Group B" months="Feb / May / Aug / Nov" color="#66bb6a"
-            stocks={scoredStocks.filter(s => s.stock.calendarGroup === 'B').map(s => s.stock.symbol)}
-            income={scoredStocks.filter(s => s.stock.calendarGroup === 'B').reduce((sum, s) => sum + s.stock.sharesHeld * s.stock.annualDividendPerShare, 0)} />
-          <CalendarGroup label="Group C" months="Mar / Jun / Sep / Dec" color="#ce93d8"
-            stocks={scoredStocks.filter(s => s.stock.calendarGroup === 'C').map(s => s.stock.symbol)}
-            income={scoredStocks.filter(s => s.stock.calendarGroup === 'C').reduce((sum, s) => sum + s.stock.sharesHeld * s.stock.annualDividendPerShare, 0)} />
-        </div>
-      </div>
-
-      {/* Actual Income Earned */}
-      <div className="dividend-income-section">
-        <h3>Actual Income Earned</h3>
-        <div className="dividend-period-selector">
-          {(['mtd', 'qtd', 'ytd', 'trailing_12m'] as TimePeriod[]).map((p) => (
-            <button key={p} className={`dividend-period-btn ${period === p ? 'active' : ''}`} onClick={() => setPeriod(p)}>
-              {p === 'trailing_12m' ? '12M' : p.toUpperCase()}
-            </button>
-          ))}
-        </div>
-        {incomeData && (
-          <div className="dividend-income-grid">
-            <div className="dividend-income-card">
-              <span className="dividend-income-label">Dividends</span>
-              <span className="dividend-income-value" style={{ color: '#66bb6a' }}>${incomeData.dividend_income.toFixed(2)}</span>
-            </div>
-            <div className="dividend-income-card">
-              <span className="dividend-income-label">Options</span>
-              <span className="dividend-income-value" style={{ color: '#4fc3f7' }}>${incomeData.options_income.toFixed(2)}</span>
-            </div>
-            <div className="dividend-income-card">
-              <span className="dividend-income-label">Interest</span>
-              <span className="dividend-income-value">${incomeData.interest_income.toFixed(2)}</span>
-            </div>
-            <div className="dividend-income-card">
-              <span className="dividend-income-label">Total</span>
-              <span className="dividend-income-value" style={{ color: '#fff', fontWeight: 700 }}>${incomeData.total_income.toFixed(2)}</span>
-            </div>
-            {hourly && (
-              <>
-                <div className="dividend-income-card">
-                  <span className="dividend-income-label">$/hr (40hr week)</span>
-                  <span className="dividend-income-value">${hourly.hourly_40hr.toFixed(2)}</span>
-                </div>
-                <div className="dividend-income-card">
-                  <span className="dividend-income-label">$/hr (24/7)</span>
-                  <span className="dividend-income-value">${hourly.hourly_24hr.toFixed(4)}</span>
-                </div>
-              </>
-            )}
-          </div>
-        )}
+        })}
       </div>
     </div>
   );
 }
 
-/* ─── Sub-components ───────────────────────────────────────────────────── */
+/* ─── Income Smoothing Tab ─────────────────────────────────────────────── */
 
-function Th({ children, tooltip, numeric }: { children: React.ReactNode; tooltip: string; numeric?: boolean }) {
+function IncomeTab({ smoothing }: { smoothing: IncomeSmoothingResult }) {
+  const maxMonthly = Math.max(...smoothing.monthlyBreakdown.map((m) => m.projected), 1);
   return (
-    <th className={numeric ? 'numeric' : ''} title={tooltip}>
-      <span className="th-content">
-        {children}
-        <span className="th-tooltip-icon">?</span>
-      </span>
-    </th>
+    <div className="div-panel">
+      <h3>Income Smoothing Calendar</h3>
+      <div className="div-smooth-kpis">
+        <div className="div-smooth-kpi">
+          <span className="div-smooth-kpi-label">Target/Month</span>
+          <span className="div-smooth-kpi-value">{fmtDec(smoothing.targetMonthly)}</span>
+        </div>
+        <div className="div-smooth-kpi">
+          <span className="div-smooth-kpi-label">Coverage Score</span>
+          <span className="div-smooth-kpi-value">{smoothing.coverageScore.toFixed(0)}/100</span>
+        </div>
+        <div className="div-smooth-kpi">
+          <span className="div-smooth-kpi-label">Weakest Month</span>
+          <span className="div-smooth-kpi-value">{smoothing.weakestMonth?.monthLabel ?? '—'}</span>
+        </div>
+        <div className="div-smooth-kpi">
+          <span className="div-smooth-kpi-label">Variance</span>
+          <span className="div-smooth-kpi-value">{fmtDec(smoothing.incomeVariance)}</span>
+        </div>
+      </div>
+      <div className="div-month-chart">
+        {smoothing.monthlyBreakdown.map((m) => (
+          <div key={m.month} className="div-month-bar-col">
+            <div className="div-month-amount">{fmt(m.projected)}</div>
+            <div className="div-month-bar-track">
+              <div className={`div-month-bar-fill div-month-bar-fill--${m.group.toLowerCase()}`}
+                style={{ height: `${(m.projected / maxMonthly) * 100}%` }} />
+            </div>
+            <div className="div-month-label">{m.monthLabel}</div>
+            <div className="div-month-group">Grp {m.group}</div>
+          </div>
+        ))}
+      </div>
+      <div className="div-group-totals">
+        {smoothing.groupTotals.map((g) => (
+          <div key={g.group} className="div-group-item">
+            <span className={`div-group-badge div-group-badge--${g.group.toLowerCase()}`}>Group {g.group}</span>
+            <span>{fmt(g.total)} ({g.pct.toFixed(0)}%)</span>
+          </div>
+        ))}
+      </div>
+      {smoothing.gapAnalysis.largestDeficit > 0 && (
+        <div className="div-gap-analysis">
+          <h4>Income Gap Analysis</h4>
+          <p>Weakest: <strong>{smoothing.gapAnalysis.lowestMonth}</strong> — deficit of {fmtDec(smoothing.gapAnalysis.largestDeficit)}/mo</p>
+          <p>Need {fmtDec(smoothing.gapAnalysis.requiredAdditionalAnnual)}/yr additional ({fmt(smoothing.gapAnalysis.requiredAdditionalCapital)} capital at 3% yield)</p>
+        </div>
+      )}
+    </div>
   );
 }
 
-function StockRow({ stock, score, price, isGroupBoundary }: { stock: DividendStockData; score: QualityScore; price?: number; isGroupBoundary?: boolean }) {
-  const annualIncome = stock.sharesHeld * stock.annualDividendPerShare;
-  const relYieldDisplay = score.relativeYield / 100;
+/* ─── Forecast Tab ─────────────────────────────────────────────────────── */
 
+function ForecastTab({ result }: { result: GrowthForecastResult }) {
   return (
-    <tr className={isGroupBoundary ? 'group-divider' : ''}>
-      <td>
-        <span className="rating-badge" style={{ backgroundColor: score.ratingColor + '22', color: score.ratingColor }}>
-          {score.rating}
-        </span>
-      </td>
-      <td className="symbol-cell">{stock.symbol}</td>
-      <td><span className={`group-badge group-badge--${stock.calendarGroup.toLowerCase()}`}>{stock.calendarGroup}</span></td>
-      <td className="numeric">{price ? `$${price.toFixed(2)}` : '—'}</td>
-      <td className="numeric">{stock.currentYield.toFixed(1)}%</td>
-      <td className="numeric" style={{ color: getRelYieldColor(score.relativeYield) }}>
-        {relYieldDisplay.toFixed(2)}x
-      </td>
-      <td className="numeric" style={{ color: getChowderColor(score.chowderNumber, stock.currentYield), fontWeight: 700 }}>
-        {score.chowderNumber.toFixed(1)}
-      </td>
-      <td className="numeric" style={{ color: getGrowthColor(stock.dividendGrowthRate) }}>
-        {stock.dividendGrowthRate.toFixed(1)}%
-      </td>
-      <td className="numeric" style={{ color: getPEColor(stock.peRatio) }}>
-        {stock.peRatio.toFixed(1)}
-      </td>
-      <td className="numeric" style={{ color: stock.priceVs52WeekHigh >= 20 ? '#34a853' : stock.priceVs52WeekHigh >= 15 ? '#57bb8a' : stock.priceVs52WeekHigh >= 10 ? '#f4b400' : '#ea4335' }}>
-        {stock.priceVs52WeekHigh}%
-      </td>
-      <td className="numeric" style={{ color: (() => { const aboveLow = Math.max(0, 100 - stock.priceVs52WeekHigh * 2); return aboveLow <= 10 ? '#34a853' : aboveLow <= 30 ? '#57bb8a' : aboveLow <= 50 ? '#f4b400' : '#ea4335'; })() }}>
-        {Math.max(0, 100 - stock.priceVs52WeekHigh * 2).toFixed(0)}%
-      </td>
-      <td className="numeric" style={{ color: getPayoutColor(stock.payoutRatio) }}>
-        {stock.payoutRatio}%
-      </td>
-      <td className="numeric" style={{ fontWeight: 700 }}>{score.totalScore.toFixed(0)}</td>
-      <td>{stock.isDividendKing ? '👑' : stock.isDividendAristocrat ? '🏆' : '—'}</td>
-      <td className="numeric">{stock.sharesHeld > 0 ? stock.sharesHeld.toFixed(2) : '—'}</td>
-      <td className="numeric" style={{ color: annualIncome > 0 ? '#66bb6a' : 'var(--color-text-muted)' }}>
-        {annualIncome > 0 ? `$${annualIncome.toFixed(2)}` : '—'}
-      </td>
-    </tr>
+    <div className="div-panel">
+      <h3>Dividend Growth Forecast</h3>
+      <p className="div-panel-desc">Current: {fmtDec(result.currentIncome)}/yr • Growth: {result.growthRate}% • Contributions: {fmt(result.monthlyContribution)}/mo</p>
+      <div className="div-forecast-table-wrap">
+        <table className="div-forecast-table">
+          <thead>
+            <tr>
+              <th>Period</th>
+              <th>Conservative (50%)</th>
+              <th>Base Case</th>
+              <th>Optimistic (125%)</th>
+              <th>From Contributions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {result.forecasts.map((f) => (
+              <tr key={f.years}>
+                <td className="div-forecast-period">{f.label}</td>
+                <td>{fmt(f.conservative)}</td>
+                <td className="div-forecast-base">{fmt(f.base)}</td>
+                <td>{fmt(f.optimistic)}</td>
+                <td className="div-forecast-contrib">+{fmt(f.contributionImpact)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
   );
 }
 
-function CalendarGroup({ label, months, color, stocks, income }: { label: string; months: string; color: string; stocks: string[]; income: number }) {
+/* ─── FI Score Tab ─────────────────────────────────────────────────────── */
+
+function FITab({ result, annualExpenses, setAnnualExpenses }: {
+  result: RetirementReadinessResult;
+  annualExpenses: number;
+  setAnnualExpenses: (v: number) => void;
+}) {
   return (
-    <div className="calendar-group-card" style={{ borderColor: color }}>
-      <span className="calendar-group-label" style={{ color }}>{label}</span>
-      <span className="calendar-group-months">{months}</span>
-      <span className="calendar-group-income">${income.toFixed(2)}/yr</span>
-      <div className="calendar-group-stocks">
-        {stocks.map((s) => <span key={s} className="calendar-stock-chip">{s}</span>)}
+    <div className="div-panel">
+      <h3>Financial Independence Score</h3>
+      <div className="div-retire-inputs">
+        <div className="div-retire-input-group">
+          <label htmlFor="annual-expenses">Annual Expenses</label>
+          <input id="annual-expenses" type="number" value={annualExpenses}
+            onChange={(e) => setAnnualExpenses(Number(e.target.value))} min={0} step={1000} />
+        </div>
+      </div>
+      <div className="div-fi-hero">
+        <div className="div-fi-score" style={{ color: result.fiStatusColor }}>{result.fiScore.toFixed(1)}%</div>
+        <div className="div-fi-status" style={{ color: result.fiStatusColor }}>{result.fiStatus}</div>
+        {result.yearsToDividendIndependence !== null && result.yearsToDividendIndependence > 0 && (
+          <div className="div-fi-years">~{result.yearsToDividendIndependence} years to Dividend Independence</div>
+        )}
+        {result.yearsToDividendIndependence === 0 && (
+          <div className="div-fi-years div-fi-years--achieved">✓ Dividend Independence Achieved</div>
+        )}
+      </div>
+      <div className="div-retire-grid">
+        <div className="div-retire-metric"><span className="div-retire-metric-label">Annual Income</span><span className="div-retire-metric-value">{fmt(result.annualIncome)}</span></div>
+        <div className="div-retire-metric"><span className="div-retire-metric-label">Monthly Income</span><span className="div-retire-metric-value">{fmt(result.monthlyIncome)}</span></div>
+        <div className="div-retire-metric"><span className="div-retire-metric-label">Annual Expenses</span><span className="div-retire-metric-value">{fmt(result.annualExpenses)}</span></div>
+        <div className="div-retire-metric"><span className="div-retire-metric-label">Qualified %</span><span className="div-retire-metric-value">{result.qualifiedPct}%</span></div>
+        <div className="div-retire-metric"><span className="div-retire-metric-label">5yr Projected</span><span className="div-retire-metric-value">{fmt(result.projectedIncome5yr)}</span></div>
+        <div className="div-retire-metric"><span className="div-retire-metric-label">10yr Projected</span><span className="div-retire-metric-value">{fmt(result.projectedIncome10yr)}</span></div>
+        <div className="div-retire-metric"><span className="div-retire-metric-label">20yr Projected</span><span className="div-retire-metric-value">{fmt(result.projectedIncome20yr)}</span></div>
+        <div className="div-retire-metric"><span className="div-retire-metric-label">Coverage</span><span className="div-retire-metric-value" style={{ color: result.fiStatusColor }}>{result.coveragePct.toFixed(1)}%</span></div>
       </div>
     </div>
   );
