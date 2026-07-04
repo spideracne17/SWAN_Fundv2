@@ -68,9 +68,10 @@ function RetirementPage() {
         setError(null);
 
         // Fetch tax lots, cash transactions, and VGT price in parallel
+        // Gracefully handle missing collections (fresh PocketBase)
         const [lots, txns, prices] = await Promise.all([
-          pb.collection('tax_lots').getFullList<TaxLot>({ requestKey: null }),
-          pb.collection('cash_transactions').getFullList<CashTransaction>({ requestKey: null }),
+          pb.collection('tax_lots').getFullList<TaxLot>({ requestKey: null }).catch(() => [] as TaxLot[]),
+          pb.collection('cash_transactions').getFullList<CashTransaction>({ requestKey: null }).catch(() => [] as CashTransaction[]),
           fetchStockPrices(['VGT']),
         ]);
 
