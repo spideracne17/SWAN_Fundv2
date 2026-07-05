@@ -254,14 +254,14 @@ function AccountingPage() {
       {/* Summary Cards */}
       <div className="accounting-cards">
         <div className="accounting-card">
-          <p className="accounting-card-label">Total Cost Basis</p>
+          <p className="accounting-card-label">Total Cost Basis (how much you put in)</p>
           <p className="accounting-card-value">
             {accountingData ? formatCurrency(accountingData.cost_basis_total) : 'N/A'}
           </p>
         </div>
 
         <div className="accounting-card">
-          <p className="accounting-card-label">Market Value</p>
+          <p className="accounting-card-label">Market Value (if you sold today)</p>
           <p className={`accounting-card-value ${accountingData?.market_value_total == null ? 'na' : ''}`}>
             {accountingData?.market_value_total != null
               ? formatCurrency(accountingData.market_value_total)
@@ -270,7 +270,7 @@ function AccountingPage() {
         </div>
 
         <div className="accounting-card">
-          <p className="accounting-card-label">Unrealized G/L</p>
+          <p className="accounting-card-label">Unrealized G/L (How much you could make)</p>
           <p className={`accounting-card-value ${gainLossClass(accountingData?.unrealized_gain_loss)}`}>
             {accountingData?.unrealized_gain_loss != null
               ? formatCurrency(accountingData.unrealized_gain_loss)
@@ -279,7 +279,7 @@ function AccountingPage() {
         </div>
 
         <div className="accounting-card">
-          <p className="accounting-card-label">Realized G/L</p>
+          <p className="accounting-card-label">Realized G/L (How much you've profited so far)</p>
           <p className={`accounting-card-value ${realizedGL ? gainLossClass(realizedGL.total) : 'na'}`}>
             {realizedGL ? formatCurrency(realizedGL.total) : 'N/A'}
           </p>

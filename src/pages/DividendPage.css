@@ -4,10 +4,11 @@
 /* Summary */
 .dividend-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 24px; }
 .dividend-summary-card { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 8px; padding: 12px 16px; display: flex; flex-direction: column; gap: 2px; }
-.dividend-summary-label { font-size: 0.625rem; text-transform: uppercase; color: var(--color-text-muted); letter-spacing: 0.3px; font-weight: 600; }
+.dividend-summary-label { font-size: 0.8125rem; text-transform: uppercase; color: var(--color-text-muted); letter-spacing: 0.3px; font-weight: 600; }
 .dividend-summary-value { font-size: 1.125rem; font-weight: 700; font-family: 'Fira Code','Cascadia Code',monospace; color: var(--color-text); }
 .dividend-summary-value--green { color: #66bb6a; }
 .dividend-summary-note { font-size: 0.5rem; color: var(--color-text-muted); font-style: italic; }
+.dividend-summary-desc { font-size: 0.6875rem; color: var(--color-text-muted); }
 
 /* Table */
 .dividend-table-wrapper { overflow-x: auto; margin-bottom: 24px; }
@@ -111,8 +112,9 @@
 /* ─── Smoothing KPIs ─── */
 .div-smooth-kpis { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
 .div-smooth-kpi { flex: 1; min-width: 100px; background: var(--color-bg); border: 1px solid var(--color-border); border-radius: 6px; padding: 10px 14px; display: flex; flex-direction: column; gap: 2px; }
-.div-smooth-kpi-label { font-size: 0.5625rem; color: var(--color-text-muted); text-transform: uppercase; font-weight: 600; }
-.div-smooth-kpi-value { font-size: 1rem; font-weight: 700; font-family: 'Fira Code','Cascadia Code',monospace; color: var(--color-text); }
+.div-smooth-kpi-label { font-size: 0.75rem; color: var(--color-text-muted); text-transform: uppercase; font-weight: 600; }
+.div-smooth-kpi-value { font-size: 1.25rem; font-weight: 700; font-family: 'Fira Code','Cascadia Code',monospace; color: var(--color-text); }
+.div-smooth-kpi-note { font-size: 0.5625rem; color: var(--color-text-muted); font-style: italic; }
 
 /* ─── Monthly Bar Chart ─── */
 .div-month-chart { display: flex; gap: 6px; align-items: flex-end; height: 200px; margin: 16px 0; position: relative; padding-bottom: 40px; }
@@ -145,7 +147,6 @@
 .div-forecast-table th { text-align: left; padding: 6px 12px; font-size: 0.625rem; font-weight: 700; color: var(--color-text-muted); text-transform: uppercase; border-bottom: 1px solid var(--color-border); }
 .div-forecast-table td { padding: 10px 12px; border-bottom: 1px solid var(--color-border); font-family: 'Fira Code','Cascadia Code',monospace; color: var(--color-text); }
 .div-forecast-period { font-weight: 700; }
-.div-forecast-base { color: #66bb6a; font-weight: 700; }
 .div-forecast-contrib { color: #4fc3f7; font-size: 0.6875rem; }
 
 /* ─── FI / Retirement ─── */
@@ -169,3 +170,54 @@
   .div-retire-grid { grid-template-columns: repeat(2, 1fr); }
   .div-month-chart { overflow-x: auto; min-width: 500px; }
 }
+
+/* ─── Forecast explainer ─── */
+.div-forecast-explainer { display: flex; gap: 16px; margin-bottom: 20px; flex-wrap: wrap; }
+.div-forecast-scenario { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 180px; padding: 10px 14px; background: var(--color-bg); border: 1px solid var(--color-border); border-radius: 6px; }
+.div-forecast-scenario--primary { border-color: rgba(102,187,106,0.4); background: rgba(102,187,106,0.05); flex: 1.5; }
+.div-forecast-scenario-label { font-size: 0.75rem; font-weight: 700; color: var(--color-text-muted); text-transform: uppercase; }
+.div-forecast-scenario-label--base { color: #66bb6a; font-size: 0.875rem; }
+.div-forecast-scenario-desc { font-size: 0.75rem; color: var(--color-text); }
+
+.div-forecast-col--primary { color: #66bb6a !important; }
+.div-forecast-base { color: #66bb6a; font-weight: 700; font-size: 0.875rem; }
+
+.div-forecast-note { margin-top: 16px; padding: 14px 18px; background: rgba(79,195,247,0.05); border: 1px solid rgba(79,195,247,0.2); border-radius: 6px; font-size: 0.8125rem; color: var(--color-text); line-height: 1.6; }
+.div-forecast-note strong { color: #4fc3f7; }
+
+/* ─── Wheel Strategy Section ─── */
+.div-wheel-section { margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--color-border); }
+.div-wheel-section h3 { margin: 0 0 8px; font-size: 1rem; font-weight: 700; }
+
+.div-wheel-candidates { margin-top: 20px; }
+.div-wheel-candidates h4 { margin: 0 0 4px; font-size: 0.875rem; font-weight: 700; }
+.div-wheel-candidates-desc { font-size: 0.75rem; color: var(--color-text-muted); margin: 0 0 12px; }
+.div-wheel-table { width: 100%; border-collapse: collapse; font-size: 0.75rem; margin-top: 8px; }
+.div-wheel-table th { text-align: left; padding: 6px 8px; font-size: 0.625rem; font-weight: 700; color: var(--color-text-muted); text-transform: uppercase; border-bottom: 1px solid var(--color-border); }
+.div-wheel-table td { padding: 8px 8px; border-bottom: 1px solid var(--color-border); color: var(--color-text); }
+.div-wheel-table td.numeric { text-align: right; font-family: 'Fira Code','Cascadia Code',monospace; }
+.div-wheel-note { font-size: 0.6875rem; color: var(--color-text-muted); }
+
+.div-wheel-rules { margin-top: 20px; }
+.div-wheel-rules h4 { margin: 0 0 10px; font-size: 0.875rem; font-weight: 700; }
+.div-wheel-rules-list { display: flex; flex-direction: column; gap: 6px; }
+.div-wheel-rule { display: flex; align-items: flex-start; gap: 10px; padding: 8px 12px; border-radius: 6px; font-size: 0.8125rem; color: var(--color-text); background: rgba(255,255,255,0.02); }
+.div-wheel-rule-num { display: flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; background: rgba(79,195,247,0.12); color: #4fc3f7; font-size: 0.6875rem; font-weight: 800; flex-shrink: 0; }
+
+/* Wheel status and details */
+.div-wheel-status { margin-top: 6px; }
+.div-wheel-details { display: flex; flex-direction: column; gap: 4px; margin-top: 8px; font-size: 0.875rem; color: var(--color-text-muted); }
+.div-wheel-details strong { color: var(--color-text); font-family: 'Fira Code','Cascadia Code',monospace; }
+.div-wheel-group { font-size: 0.8125rem; color: var(--color-text-muted); margin-top: 8px; }
+.div-wheel-min-strike { color: var(--color-text); font-weight: 500; }
+
+/* Underwater card warning */
+.deploy-card--underwater { border: 2px solid #ef5350; background: rgba(239,83,80,0.06); box-shadow: 0 0 12px rgba(239,83,80,0.2); position: relative; overflow: hidden; padding-top: 32px !important; }
+.deploy-card--underwater::before { content: '⚠️ UNDERWATER — assignment = realized loss'; position: absolute; top: 0; left: 0; right: 0; background: #ef5350; color: #fff; font-size: 0.6875rem; font-weight: 800; text-align: center; padding: 4px 0; letter-spacing: 0.3px; }
+
+.div-wheel-underwater-math { display: flex; flex-direction: column; gap: 4px; margin-top: 8px; padding: 10px 12px; background: rgba(239,83,80,0.06); border: 1px solid rgba(239,83,80,0.2); border-radius: 6px; font-size: 0.8125rem; color: var(--color-text); }
+.div-wheel-underwater-header { font-weight: 700; color: #ef5350; font-size: 0.75rem; margin-bottom: 2px; }
+.div-wheel-loss { color: #ef5350; }
+.div-wheel-tax-note { color: #66bb6a; font-size: 0.75rem; margin-top: 4px; }
+.div-wheel-wash-note { color: #FFB800; font-size: 0.75rem; }
+.div-wheel-est-note { color: var(--color-text-muted); font-size: 0.625rem; font-style: italic; margin-top: 4px; }

@@ -82,23 +82,34 @@ function DividendPage() {
   const monthlyIncome = totalAnnualIncome / 12;
   const avgScore = scoredStocks.reduce((s, { score }) => s + score.totalScore, 0) / Math.max(scoredStocks.length, 1);
 
+  // Weighted average dividend growth rate (weighted by each stock's income contribution)
+  const weightedGrowthRate = useMemo(() => {
+    const holdingsWithIncome = scoredStocks.filter(({ stock }) => stock.sharesHeld > 0 && stock.annualDividendPerShare > 0);
+    const totalIncome = holdingsWithIncome.reduce((s, { stock }) => s + stock.sharesHeld * stock.annualDividendPerShare, 0);
+    if (totalIncome === 0) return 7; // fallback if no holdings
+    return holdingsWithIncome.reduce((s, { stock }) => {
+      const weight = (stock.sharesHeld * stock.annualDividendPerShare) / totalIncome;
+      return s + stock.dividendGrowthRate * weight;
+    }, 0);
+  }, [scoredStocks]);
+
   const smoothing = useMemo(() => calculateIncomeSmoothing(TARGET_PORTFOLIO), []);
 
   const forecast = useMemo(() => calculateGrowthForecast({
     currentAnnualIncome: totalAnnualIncome,
-    historicalGrowthRate: 7,
+    historicalGrowthRate: weightedGrowthRate,
     monthlyContribution: monthlyDeploy,
     averageYield: DIVIDEND_SETTINGS.averageYield,
     yearsToRetirement: 20,
-  }), [totalAnnualIncome, monthlyDeploy]);
+  }), [totalAnnualIncome, monthlyDeploy, weightedGrowthRate]);
 
   const retirement = useMemo(() => calculateRetirementReadiness({
     annualDividendIncome: totalAnnualIncome,
     annualExpenses,
     monthlyContribution: monthlyDeploy,
     averageYield: DIVIDEND_SETTINGS.averageYield,
-    dividendGrowthRate: 7,
-    qualifiedDividendPct: 85,
+    dividendGrowthRate: weightedGrowthRate,
+    qualifiedDividendPct: 100,
   }), [totalAnnualIncome, annualExpenses, monthlyDeploy]);
 
   useEffect(() => {
@@ -136,6 +147,7 @@ function DividendPage() {
         </div>
         <div className="dividend-summary-card">
           <span className="dividend-summary-label">Coverage Score</span>
+          <span className="dividend-summary-desc">(Income spread across 12 months)</span>
           <span className="dividend-summary-value">{smoothing.coverageScore.toFixed(0)}</span>
         </div>
         <div className="dividend-summary-card">
@@ -166,7 +178,7 @@ function DividendPage() {
       {/* Tab Content */}
       {activeTab === 'quality' && <QualityTab scoredStocks={scoredStocks} prices={prices} />}
       {activeTab === 'deploy' && <DeployTab scoredStocks={scoredStocks} deployAmount={deployAmount} setDeployAmount={setDeployAmount} />}
-      {activeTab === 'income' && <IncomeTab smoothing={smoothing} />}
+      {activeTab === 'income' && <IncomeTab smoothing={smoothing} scoredStocks={scoredStocks} prices={prices} />}
       {activeTab === 'forecast' && <ForecastTab result={forecast} />}
       {activeTab === 'fi' && <FITab result={retirement} annualExpenses={annualExpenses} setAnnualExpenses={setAnnualExpenses} />}
     </div>
@@ -312,7 +324,7 @@ function DeployTab({ scoredStocks, deployAmount, setDeployAmount }: {
 
 /* ─── Income Smoothing Tab ─────────────────────────────────────────────── */
 
-function IncomeTab({ smoothing }: { smoothing: IncomeSmoothingResult }) {
+function IncomeTab({ smoothing, scoredStocks, prices }: { smoothing: IncomeSmoothingResult; scoredStocks: { stock: DividendStockData; score: QualityScore }[]; prices: Map<string, number> }) {
   const maxMonthly = Math.max(...smoothing.monthlyBreakdown.map((m) => m.projected), 1);
   return (
     <div className="div-panel">
@@ -363,6 +375,151 @@ function IncomeTab({ smoothing }: { smoothing: IncomeSmoothingResult }) {
           <p>Need {fmtDec(smoothing.gapAnalysis.requiredAdditionalAnnual)}/yr additional ({fmt(smoothing.gapAnalysis.requiredAdditionalCapital)} capital at 3% yield)</p>
         </div>
       )}
+
+      {/* Options Premium Income — CSPs + Covered Calls */}
+      <div className="div-wheel-section">
+        <h3>🔄 Options Premium Income</h3>
+        <p className="div-panel-desc">
+          Sell puts on stocks you want to own — get paid while you wait. If assigned, sell covered calls to create extra income. If called away, repeat.
+        </p>
+
+        {/* Wheel KPIs */}
+        <div className="div-smooth-kpis">
+          <div className="div-smooth-kpi">
+            <span className="div-smooth-kpi-label">Active CSPs</span>
+            <span className="div-smooth-kpi-value">0</span>
+            <span className="div-smooth-kpi-note">Waiting for assignment</span>
+          </div>
+          <div className="div-smooth-kpi">
+            <span className="div-smooth-kpi-label">Active Covered Calls</span>
+            <span className="div-smooth-kpi-value">0</span>
+            <span className="div-smooth-kpi-note">On held shares</span>
+          </div>
+          <div className="div-smooth-kpi">
+            <span className="div-smooth-kpi-label">Premium Collected (YTD)</span>
+            <span className="div-smooth-kpi-value">$0</span>
+          </div>
+          <div className="div-smooth-kpi">
+            <span className="div-smooth-kpi-label">Assignments (YTD)</span>
+            <span className="div-smooth-kpi-value">0</span>
+          </div>
+        </div>
+
+        {/* Candidates */}
+        <div className="div-wheel-candidates">
+          <h4>Top Options Income Candidates</h4>
+          <p className="div-wheel-candidates-desc">
+            Stocks rated Buy or higher — sell puts to get paid while building to 100 shares, then sell covered calls for extra income.
+          </p>
+          <div className="deploy-cards">
+            {scoredStocks
+              .filter(({ score }) => score.totalScore >= 80)
+              .slice(0, 4)
+              .map(({ stock, score }) => {
+                const price = prices.get(stock.symbol) ?? 0;
+                const sharesNeeded = Math.max(0, 100 - stock.sharesHeld);
+                const costTo100 = sharesNeeded * price;
+                const canSellCalls = stock.sharesHeld >= 100;
+                const canSellPuts = stock.sharesHeld < 100;
+
+                let status: string;
+                let statusColor: string;
+                if (canSellCalls) {
+                  status = '✅ Ready — sell covered calls';
+                  statusColor = '#66bb6a';
+                } else if (stock.sharesHeld > 0) {
+                  status = `Need ${sharesNeeded.toFixed(0)} more shares ($${costTo100.toFixed(0)}) for covered calls`;
+                  statusColor = '#FFB800';
+                } else {
+                  status = `Need 100 shares ($${costTo100.toFixed(0)}) — sell puts in the meantime`;
+                  statusColor = '#4fc3f7';
+                }
+
+                const isUnderwater = canSellCalls && price > 0 && price < (stock.costBasis / stock.sharesHeld);
+
+                // Estimated premium: Price × 2% × IV factor × time factor
+                // IV proxy: stocks further below 52W high have higher IV
+                const ivFactor = 1 + (stock.priceVs52WeekHigh / 100);
+                const dteDays = 37; // target 30-45 DTE midpoint
+                const timeFactor = Math.sqrt(dteDays / 365);
+                const estPremium = price > 0 ? price * 0.02 * ivFactor * timeFactor : 2;
+
+                return (
+                  <div key={stock.symbol} className={`deploy-card ${isUnderwater ? 'deploy-card--underwater' : ''}`}>
+                    <div className="deploy-card-top">
+                      <span className="deploy-symbol">{stock.symbol}</span>
+                      <span className="deploy-badge" style={{ color: score.ratingColor }}>{score.rating} ({score.totalScore.toFixed(0)})</span>
+                    </div>
+                    <span className="deploy-name">{stock.name}</span>
+                    <div className="div-wheel-status">
+                      <span style={{ color: statusColor, fontWeight: 600, fontSize: '0.8125rem' }}>{status}</span>
+                    </div>
+                    <div className="div-wheel-details">
+                      <span>Shares held: <strong>{stock.sharesHeld > 0 ? stock.sharesHeld.toFixed(2) : '0'}</strong></span>
+                      <span>Price: <strong>{price > 0 ? `$${price.toFixed(2)}` : '—'}</strong></span>
+                      {stock.sharesHeld > 0 && (
+                        <span>Cost basis/share: <strong>${(stock.costBasis / stock.sharesHeld).toFixed(2)}</strong></span>
+                      )}
+                      {canSellCalls && stock.costBasis > 0 && (
+                        <span className="div-wheel-min-strike">
+                          Min CC strike (floor): <strong>${(stock.costBasis / stock.sharesHeld).toFixed(2)}</strong>
+                        </span>
+                      )}
+                      {isUnderwater && price > 0 && (
+                        <div className="div-wheel-underwater-math">
+                          <span className="div-wheel-underwater-header">⚠️ UNDERWATER — assignment = realized loss</span>
+                          <span>If assigned at ${(price * 1.05).toFixed(0)} + ~${estPremium.toFixed(2)} est. premium = ${(price * 1.05 + estPremium).toFixed(2)} proceeds</span>
+                          <span>vs cost basis ${(stock.costBasis / stock.sharesHeld).toFixed(2)} → <strong className="div-wheel-loss">loss of ${((stock.costBasis / stock.sharesHeld) - (price * 1.05 + estPremium)).toFixed(2)}/share</strong></span>
+                          <span className="div-wheel-tax-note">💡 May be useful for tax-loss harvesting if you have gains to offset</span>
+                          <span className="div-wheel-wash-note">⚠️ Wash sale: don't rebuy within 30 days or loss is disallowed</span>
+                          <span className="div-wheel-est-note">Premium est. based on price, IV proxy, 37 DTE — verify in brokerage</span>
+                        </div>
+                      )}
+                      {canSellPuts && price > 0 && (
+                        <span>Put strike target: <strong>${(price * 0.92).toFixed(0)} – ${(price * 0.95).toFixed(0)}</strong></span>
+                      )}
+                      {canSellCalls && price > 0 && price >= (stock.costBasis / Math.max(stock.sharesHeld, 1)) && (
+                        <span>Call strike target: <strong>${(price * 1.05).toFixed(0)} – ${(price * 1.10).toFixed(0)}</strong></span>
+                      )}
+                    </div>
+                    <span className="div-wheel-group">Group {stock.calendarGroup} • {stock.priceVs52WeekHigh >= 20 ? '📉 Near 52W low' : stock.priceVs52WeekHigh >= 10 ? 'Good discount' : 'Near highs'}</span>
+                  </div>
+                );
+              })}
+          </div>
+        </div>
+
+        {/* Rules */}
+        <div className="div-wheel-rules">
+          <h4>Options Income Rules</h4>
+          <div className="div-wheel-rules-list">
+            <div className="div-wheel-rule">
+              <span className="div-wheel-rule-num">1</span>
+              <span>Only sell puts on stocks rated <strong>Buy or Strong Buy</strong> — you must want to own them</span>
+            </div>
+            <div className="div-wheel-rule">
+              <span className="div-wheel-rule-num">2</span>
+              <span>Strike 5-10% below current price — get paid to wait for a discount</span>
+            </div>
+            <div className="div-wheel-rule">
+              <span className="div-wheel-rule-num">3</span>
+              <span>DTE 30-45 days — sweet spot for theta decay</span>
+            </div>
+            <div className="div-wheel-rule">
+              <span className="div-wheel-rule-num">4</span>
+              <span>If assigned, sell covered calls to create extra income (5-10% above cost basis)</span>
+            </div>
+            <div className="div-wheel-rule">
+              <span className="div-wheel-rule-num">5</span>
+              <span>Never sell covered calls below your cost basis — don't lock in a loss</span>
+            </div>
+            <div className="div-wheel-rule">
+              <span className="div-wheel-rule-num">6</span>
+              <span>⚠️ Hold 60+ days before CC assignment to keep dividends qualified</span>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -373,30 +530,74 @@ function ForecastTab({ result }: { result: GrowthForecastResult }) {
   return (
     <div className="div-panel">
       <h3>Dividend Growth Forecast</h3>
-      <p className="div-panel-desc">Current: {fmtDec(result.currentIncome)}/yr • Growth: {result.growthRate}% • Contributions: {fmt(result.monthlyContribution)}/mo</p>
+      <p className="div-panel-desc">
+        If you keep doing what you're doing, how much dividend income will you have?
+      </p>
+
+      {/* Current stats */}
+      <div className="div-smooth-kpis">
+        <div className="div-smooth-kpi">
+          <span className="div-smooth-kpi-label">Current Annual Income</span>
+          <span className="div-smooth-kpi-value">{fmtDec(result.currentIncome)}</span>
+        </div>
+        <div className="div-smooth-kpi">
+          <span className="div-smooth-kpi-label">Portfolio Dividend Growth Rate</span>
+          <span className="div-smooth-kpi-value">{result.growthRate.toFixed(2)}%/yr</span>
+          <span className="div-smooth-kpi-note">Weighted by income contribution</span>
+        </div>
+        <div className="div-smooth-kpi">
+          <span className="div-smooth-kpi-label">Monthly Contribution</span>
+          <span className="div-smooth-kpi-value">{fmt(result.monthlyContribution)}/mo</span>
+        </div>
+      </div>
+
+      {/* Scenario explanation */}
+      <div className="div-forecast-explainer">
+        <div className="div-forecast-scenario div-forecast-scenario--primary">
+          <span className="div-forecast-scenario-label div-forecast-scenario-label--base">Base Case — Most Likely</span>
+          <span className="div-forecast-scenario-desc">Dividends grow at historical rate ({result.growthRate.toFixed(2)}%/yr)</span>
+        </div>
+        <div className="div-forecast-scenario">
+          <span className="div-forecast-scenario-label">Conservative — Worst Case</span>
+          <span className="div-forecast-scenario-desc">Growth slows to half ({(result.growthRate * 0.5).toFixed(2)}%/yr)</span>
+        </div>
+        <div className="div-forecast-scenario">
+          <span className="div-forecast-scenario-label">Optimistic — Best Case</span>
+          <span className="div-forecast-scenario-desc">Growth accelerates ({(result.growthRate * 1.25).toFixed(2)}%/yr)</span>
+        </div>
+      </div>
+
+      {/* Projection table */}
       <div className="div-forecast-table-wrap">
         <table className="div-forecast-table">
           <thead>
             <tr>
               <th>Period</th>
-              <th>Conservative (50%)</th>
-              <th>Base Case</th>
-              <th>Optimistic (125%)</th>
-              <th>From Contributions</th>
+              <th className="div-forecast-col--primary" title="Dividends grow at historical rate — most likely outcome">Base Case</th>
+              <th title="Dividends grow at 50% of historical rate">Conservative</th>
+              <th title="Dividends grow at 125% of historical rate">Optimistic</th>
+              <th title="Additional income from new money invested each month">From Contributions</th>
             </tr>
           </thead>
           <tbody>
             {result.forecasts.map((f) => (
               <tr key={f.years}>
                 <td className="div-forecast-period">{f.label}</td>
-                <td>{fmt(f.conservative)}</td>
                 <td className="div-forecast-base">{fmt(f.base)}</td>
+                <td>{fmt(f.conservative)}</td>
                 <td>{fmt(f.optimistic)}</td>
                 <td className="div-forecast-contrib">+{fmt(f.contributionImpact)}</td>
               </tr>
             ))}
           </tbody>
         </table>
+      </div>
+
+      {/* How to read this */}
+      <div className="div-forecast-note">
+        <strong>How to read this:</strong> Base Case 10yr shows your projected annual dividend income in 10 years.
+        This combines growth from existing holdings + new income from monthly contributions compounding over time.
+        The "From Contributions" column shows how much of the total comes specifically from new money you invest.
       </div>
     </div>
   );
