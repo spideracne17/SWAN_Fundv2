@@ -183,10 +183,10 @@ function QualityTab({ scoredStocks, prices }: { scoredStocks: { stock: DividendS
           <tr>
             <th>Rating</th><th>Symbol</th><th>Group</th><th className="numeric">Price</th>
             <th className="numeric">Yield</th><th className="numeric">Rel. Yield</th>
-            <th className="numeric">Chowder</th><th className="numeric">Growth</th>
-            <th className="numeric">P/E</th><th className="numeric">% Below High</th>
-            <th className="numeric">Payout</th><th className="numeric">Score</th>
-            <th>King/Arist</th><th className="numeric">Shares</th><th className="numeric">Ann. Income</th>
+            <th className="center">Chowder</th><th className="center">Growth</th>
+            <th className="center">P/E</th><th className="center narrow-col">% Below High</th>
+            <th className="center">Payout</th><th className="center">Score</th>
+            <th className="center">King/Arist</th><th className="numeric">Shares</th><th className="numeric narrow-col">Dividend Payment</th><th className="numeric narrow-col">Annual Income</th>
           </tr>
         </thead>
         <tbody>
@@ -204,14 +204,15 @@ function QualityTab({ scoredStocks, prices }: { scoredStocks: { stock: DividendS
                 <td className="numeric">{price ? `$${price.toFixed(2)}` : '—'}</td>
                 <td className="numeric">{stock.currentYield.toFixed(1)}%</td>
                 <td className="numeric" style={{ color: getRelYieldColor(score.relativeYield) }}>{relYield.toFixed(2)}x</td>
-                <td className="numeric" style={{ color: getChowderColor(score.chowderNumber, stock.currentYield), fontWeight: 700 }}>{score.chowderNumber.toFixed(1)}</td>
-                <td className="numeric" style={{ color: getGrowthColor(stock.dividendGrowthRate) }}>{stock.dividendGrowthRate.toFixed(1)}%</td>
-                <td className="numeric" style={{ color: getPEColor(stock.peRatio) }}>{stock.peRatio.toFixed(1)}</td>
-                <td className="numeric" style={{ color: stock.priceVs52WeekHigh >= 20 ? '#34a853' : stock.priceVs52WeekHigh >= 10 ? '#f4b400' : '#ea4335' }}>{stock.priceVs52WeekHigh}%</td>
-                <td className="numeric" style={{ color: getPayoutColor(stock.payoutRatio) }}>{stock.payoutRatio}%</td>
-                <td className="numeric" style={{ fontWeight: 700 }}>{score.totalScore.toFixed(0)}</td>
-                <td>{stock.isDividendKing ? '👑' : stock.isDividendAristocrat ? '🏆' : '—'}</td>
+                <td className="center" style={{ color: getChowderColor(score.chowderNumber, stock.currentYield), fontWeight: 700 }}>{score.chowderNumber.toFixed(1)}</td>
+                <td className="center" style={{ color: getGrowthColor(stock.dividendGrowthRate) }}>{stock.dividendGrowthRate.toFixed(1)}%</td>
+                <td className="center" style={{ color: getPEColor(stock.peRatio) }}>{stock.peRatio.toFixed(1)}</td>
+                <td className="center" style={{ color: stock.priceVs52WeekHigh >= 20 ? '#34a853' : stock.priceVs52WeekHigh >= 10 ? '#f4b400' : '#ea4335' }}>{stock.priceVs52WeekHigh}%</td>
+                <td className="center" style={{ color: getPayoutColor(stock.payoutRatio) }}>{stock.payoutRatio}%</td>
+                <td className="center" style={{ fontWeight: 700 }}>{score.totalScore.toFixed(0)}</td>
+                <td className="center">{stock.isDividendKing ? '👑' : stock.isDividendAristocrat ? '🏆' : '—'}</td>
                 <td className="numeric">{stock.sharesHeld > 0 ? stock.sharesHeld.toFixed(2) : '—'}</td>
+                <td className="numeric">${(stock.annualDividendPerShare / 4 * stock.sharesHeld).toFixed(2)}</td>
                 <td className="numeric" style={{ color: annualIncome > 0 ? '#66bb6a' : 'var(--color-text-muted)' }}>{annualIncome > 0 ? `$${annualIncome.toFixed(2)}` : '—'}</td>
               </tr>
             );

@@ -12,10 +12,13 @@
 /* Table */
 .dividend-table-wrapper { overflow-x: auto; margin-bottom: 24px; }
 .dividend-table { width: 100%; border-collapse: collapse; font-size: 0.75rem; }
-.dividend-table th { text-align: left; padding: 6px 8px; font-size: 0.625rem; font-weight: 700; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.3px; border-bottom: 1px solid var(--color-border); white-space: normal; cursor: help; }
+.dividend-table th { text-align: left; padding: 6px 8px; font-size: 0.625rem; font-weight: 700; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.3px; border-bottom: 1px solid var(--color-border); white-space: nowrap; cursor: help; }
+.dividend-table th.narrow-col { white-space: normal; width: 70px; }
 .dividend-table th.numeric { text-align: right; }
-.dividend-table td { padding: 8px 8px; border-bottom: 1px solid var(--color-border); color: var(--color-text); }
+.dividend-table th.center { text-align: center; }
+.dividend-table td { padding: 8px 8px; border-bottom: 1px solid var(--color-border); color: var(--color-text); white-space: nowrap; }
 .dividend-table td.numeric { text-align: right; font-family: 'Fira Code','Cascadia Code',monospace; font-size: 0.6875rem; }
+.dividend-table td.center { text-align: center; font-family: 'Fira Code','Cascadia Code',monospace; font-size: 0.6875rem; }
 .dividend-table tr:hover { background: rgba(255,255,255,0.02); }
 
 /* Tooltip icon on headers */
@@ -114,14 +117,14 @@
 /* ─── Monthly Bar Chart ─── */
 .div-month-chart { display: flex; gap: 6px; align-items: flex-end; height: 200px; margin: 16px 0; position: relative; padding-bottom: 40px; }
 .div-month-bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; height: 100%; justify-content: flex-end; }
-.div-month-amount { font-size: 0.5rem; color: var(--color-text-muted); font-family: 'Fira Code','Cascadia Code',monospace; margin-bottom: 4px; white-space: nowrap; }
+.div-month-amount { font-size: 1rem; color: var(--color-text); font-family: 'Fira Code','Cascadia Code',monospace; margin-bottom: 4px; white-space: nowrap; font-weight: 700; }
 .div-month-bar-track { width: 100%; max-width: 40px; flex: 1; display: flex; align-items: flex-end; border-radius: 3px 3px 0 0; overflow: hidden; }
 .div-month-bar-fill { width: 100%; border-radius: 3px 3px 0 0; min-height: 2px; transition: height 0.3s; }
 .div-month-bar-fill--a { background: #4fc3f7; }
 .div-month-bar-fill--b { background: #66bb6a; }
 .div-month-bar-fill--c { background: #ce93d8; }
-.div-month-label { font-size: 0.625rem; font-weight: 600; color: var(--color-text-muted); margin-top: 6px; }
-.div-month-group { font-size: 0.5rem; color: var(--color-text-muted); }
+.div-month-label { font-size: 1rem; font-weight: 700; color: var(--color-text); margin-top: 6px; }
+.div-month-group { font-size: 0.875rem; color: var(--color-text-muted); font-weight: 500; }
 
 /* ─── Group Totals ─── */
 .div-group-totals { display: flex; gap: 16px; margin-top: 16px; }
@@ -132,9 +135,9 @@
 .div-group-badge--c { background: rgba(206,147,216,0.15); color: #ce93d8; }
 
 /* ─── Gap Analysis ─── */
-.div-gap-analysis { margin-top: 16px; padding: 12px 16px; background: rgba(255,184,0,0.05); border: 1px solid rgba(255,184,0,0.2); border-radius: 6px; }
-.div-gap-analysis h4 { margin: 0 0 6px; font-size: 0.75rem; color: #FFB800; }
-.div-gap-analysis p { margin: 4px 0; font-size: 0.6875rem; color: var(--color-text-muted); }
+.div-gap-analysis { margin-top: 16px; padding: 16px 20px; background: rgba(255,184,0,0.05); border: 1px solid rgba(255,184,0,0.2); border-radius: 6px; }
+.div-gap-analysis h4 { margin: 0 0 8px; font-size: 0.9375rem; color: #FFB800; font-weight: 700; }
+.div-gap-analysis p { margin: 6px 0; font-size: 0.875rem; color: var(--color-text); line-height: 1.5; }
 
 /* ─── Forecast Table ─── */
 .div-forecast-table-wrap { overflow-x: auto; }
