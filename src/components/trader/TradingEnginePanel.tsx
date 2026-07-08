@@ -420,12 +420,32 @@ export default function TradingEnginePanel({ accountValue, optionsData }: Props)
           <h4>Capital Efficiency & Performance</h4>
           <div className="engine-efficiency-grid">
             <div className="engine-eff-item">
-              <span className="engine-eff-label">Total Trades</span>
-              <span className="engine-eff-value">{optionsData?.totalTrades ?? 0}</span>
+              <span className="engine-eff-label">Expired</span>
+              <span className="engine-eff-value">{optionsData?.expiredPositions.length ?? 0}</span>
+            </div>
+            <div className="engine-eff-item">
+              <span className="engine-eff-label">Closed Early</span>
+              <span className="engine-eff-value">{optionsData?.closedPositions.length ?? 0}</span>
+            </div>
+            <div className="engine-eff-item">
+              <span className="engine-eff-label">Assigned</span>
+              <span className="engine-eff-value">{optionsData?.openPositions.filter(p => p.status === 'assigned').length ?? 0}</span>
+            </div>
+            <div className="engine-eff-item">
+              <span className="engine-eff-label">Lost</span>
+              <span className="engine-eff-value">{optionsData ? [...optionsData.closedPositions, ...optionsData.expiredPositions].filter(p => (p.realizedPnL ?? 0) < 0).length : 0}</span>
+            </div>
+            <div className="engine-eff-item">
+              <span className="engine-eff-label">Open</span>
+              <span className="engine-eff-value">{optionsData?.openPositions.length ?? 0}</span>
             </div>
             <div className="engine-eff-item">
               <span className="engine-eff-label">Win Rate</span>
               <span className="engine-eff-value">{optionsData && optionsData.winRate > 0 ? `${optionsData.winRate.toFixed(0)}%` : '—'}</span>
+            </div>
+            <div className="engine-eff-item">
+              <span className="engine-eff-label">Total Trades</span>
+              <span className="engine-eff-value">{optionsData?.totalTrades ?? 0}</span>
             </div>
             <div className="engine-eff-item">
               <span className="engine-eff-label">Avg Days Held</span>

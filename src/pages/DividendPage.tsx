@@ -386,22 +386,33 @@ function IncomeTab({ smoothing, scoredStocks, prices }: { smoothing: IncomeSmoot
         {/* Wheel KPIs */}
         <div className="div-smooth-kpis">
           <div className="div-smooth-kpi">
-            <span className="div-smooth-kpi-label">Active CSPs</span>
+            <span className="div-smooth-kpi-label">Expired</span>
             <span className="div-smooth-kpi-value">0</span>
-            <span className="div-smooth-kpi-note">Waiting for assignment</span>
+            <span className="div-smooth-kpi-note">Kept premium, no assignment</span>
           </div>
           <div className="div-smooth-kpi">
-            <span className="div-smooth-kpi-label">Active Covered Calls</span>
+            <span className="div-smooth-kpi-label">Closed Early</span>
             <span className="div-smooth-kpi-value">0</span>
-            <span className="div-smooth-kpi-note">On held shares</span>
+            <span className="div-smooth-kpi-note">Bought back before expiry</span>
+          </div>
+          <div className="div-smooth-kpi">
+            <span className="div-smooth-kpi-label">Assigned</span>
+            <span className="div-smooth-kpi-value">0</span>
+            <span className="div-smooth-kpi-note">Shares received/called away</span>
+          </div>
+          <div className="div-smooth-kpi">
+            <span className="div-smooth-kpi-label">Open</span>
+            <span className="div-smooth-kpi-value">0</span>
+            <span className="div-smooth-kpi-note">Active positions</span>
+          </div>
+          <div className="div-smooth-kpi">
+            <span className="div-smooth-kpi-label">Win Rate</span>
+            <span className="div-smooth-kpi-value">—</span>
+            <span className="div-smooth-kpi-note">Expired + Closed profitable</span>
           </div>
           <div className="div-smooth-kpi">
             <span className="div-smooth-kpi-label">Premium Collected (YTD)</span>
             <span className="div-smooth-kpi-value">$0</span>
-          </div>
-          <div className="div-smooth-kpi">
-            <span className="div-smooth-kpi-label">Assignments (YTD)</span>
-            <span className="div-smooth-kpi-value">0</span>
           </div>
         </div>
 

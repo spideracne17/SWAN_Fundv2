@@ -126,7 +126,7 @@
 .engine-check-detail { color: var(--color-text-muted); font-size: 0.625rem; }
 
 /* ─── Capital Efficiency ─── */
-.engine-efficiency-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.engine-efficiency-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; }
 .engine-eff-item { display: flex; flex-direction: column; gap: 2px; padding: 10px; background: var(--color-bg); border-radius: 6px; border: 1px solid var(--color-border); }
 .engine-eff-label { font-size: 0.625rem; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.3px; }
 .engine-eff-value { font-size: 0.9375rem; font-weight: 700; font-family: 'Fira Code','Cascadia Code',monospace; color: var(--color-text); }
