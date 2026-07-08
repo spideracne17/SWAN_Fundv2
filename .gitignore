@@ -32,6 +32,10 @@ dist-ssr
 pocketbase/server/pocketbase.exe
 pocketbase/server/pb_migrations/
 
+# Schwab tokens (secrets — never commit)
+schwab/tokens.json
+schwab/.certs/
+
 # PocketBase zip download
 pocketbase_*.zip
 
