@@ -66,14 +66,31 @@ function getSelfSignedCert() {
   if (!fs.existsSync(certDir)) fs.mkdirSync(certDir, { recursive: true });
 
   console.log('Generating self-signed certificate...');
-  try {
-    execSync(
-      `openssl req -x509 -newkey rsa:2048 -keyout "${keyPath}" -out "${certPath}" -days 365 -nodes -subj "/CN=localhost"`,
-      { stdio: 'pipe' }
-    );
-  } catch {
-    console.error('ERROR: Could not generate SSL certificate. Install OpenSSL or create certs manually.');
-    console.error('Alternatively, try: npm install -g mkcert && mkcert create-ca && mkcert create-cert');
+
+  // Try openssl from Git for Windows, then system PATH
+  const opensslPaths = [
+    'C:\\Program Files\\Git\\usr\\bin\\openssl.exe',
+    'C:\\Program Files (x86)\\Git\\usr\\bin\\openssl.exe',
+    'openssl',
+  ];
+
+  let success = false;
+  for (const opensslCmd of opensslPaths) {
+    try {
+      execSync(
+        `"${opensslCmd}" req -x509 -newkey rsa:2048 -keyout "${keyPath}" -out "${certPath}" -days 365 -nodes -subj "/CN=localhost"`,
+        { stdio: 'pipe' }
+      );
+      success = true;
+      break;
+    } catch {
+      continue;
+    }
+  }
+
+  if (!success) {
+    console.error('ERROR: Could not generate SSL certificate. OpenSSL not found.');
+    console.error('Install Git for Windows (includes OpenSSL) or add openssl to PATH.');
     process.exit(1);
   }
 
