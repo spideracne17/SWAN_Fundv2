@@ -334,8 +334,11 @@ export default function TradingEnginePanel({ accountValue, optionsData }: Props)
             <div className="engine-range-row">
               <span>Open Risk</span><span>{fmt(heat.totalOpenRisk)}</span>
             </div>
+            <div className="engine-range-row engine-range-row--highlight">
+              <span>Cash Available</span><span>{fmt(accountValue)}</span>
+            </div>
             <div className="engine-range-row">
-              <span>Available</span><span>{fmt(heat.availableNewRisk)}</span>
+              <span>Available (30% risk cap)</span><span>{fmt(heat.availableNewRisk)}</span>
             </div>
             <div className="engine-range-row">
               <span>Slots</span><span>{heat.slotsOpen} / {heat.slotsTotal}</span>

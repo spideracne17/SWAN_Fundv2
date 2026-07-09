@@ -462,3 +462,7 @@
     text-align: left;
   }
 }
+
+/* Cash Available highlight row */
+.engine-range-row--highlight { background: rgba(102,187,106,0.08); border-radius: 4px; padding: 4px 6px !important; margin: 2px -6px; }
+.engine-range-row--highlight span:last-child { color: #66bb6a; font-weight: 700; font-size: 0.8125rem; }

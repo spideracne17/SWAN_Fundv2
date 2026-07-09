@@ -16,7 +16,7 @@
 
 import { getValidToken } from './tokenManager';
 
-const BASE_URL = 'https://api.schwabapi.com';
+const BASE_URL = import.meta.env.DEV ? '/schwab-api' : 'https://api.schwabapi.com';
 
 export class SchwabApiError extends Error {
   constructor(public status: number, message: string) {

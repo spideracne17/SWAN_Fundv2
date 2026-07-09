@@ -25,6 +25,40 @@ export interface DataResult<T> {
   error?: string;
 }
 
+/* ─── Token helpers for dual-app setup ─────────────────────────────────── */
+
+const TRADING_TOKENS_KEY = 'schwab_trading_tokens';
+
+function loadTradingTokens(): { access_token: string; expires_at: number; refresh_token: string; obtained_at: number } | null {
+  try {
+    const raw = localStorage.getItem(TRADING_TOKENS_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch { return null; }
+}
+
+async function getValidTradingToken(): Promise<string | null> {
+  // Try to load from Vite middleware (handles refresh)
+  try {
+    const resp = await fetch('/schwab-trading-tokens.json');
+    if (resp.ok) {
+      const tokens = await resp.json();
+      if (tokens.access_token) {
+        localStorage.setItem(TRADING_TOKENS_KEY, JSON.stringify(tokens));
+        return tokens.access_token;
+      }
+    }
+  } catch { /* fall through */ }
+
+  // Try localStorage
+  const tokens = loadTradingTokens();
+  if (tokens && Date.now() < tokens.expires_at - 60000) {
+    return tokens.access_token;
+  }
+
+  return null;
+}
+
 /* ─── Account Value ────────────────────────────────────────────────────── */
 
 export interface AccountSummary {
@@ -44,20 +78,23 @@ const ACCOUNT_CACHE_KEY = 'schwab_account_cache';
  * Get account value — Schwab first, localStorage setting fallback.
  */
 export async function getAccountValue(): Promise<DataResult<AccountSummary>> {
-  // Try Schwab
+  // Try Schwab Trading API
   try {
-    const token = await getValidToken();
+    const token = await getValidTradingToken();
     if (token) {
-      const accounts = await getAllAccountsWithPositions();
-      const summary = mapAccountData(accounts);
+      const BASE = import.meta.env.DEV ? '/schwab-api' : 'https://api.schwabapi.com';
+      const response = await fetch(`${BASE}/trader/v1/accounts?fields=positions`, {
+        headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' },
+        signal: AbortSignal.timeout(15000),
+      });
 
-      // Cache for fallback
-      localStorage.setItem(ACCOUNT_CACHE_KEY, JSON.stringify({
-        data: summary,
-        timestamp: Date.now(),
-      }));
+      if (response.ok) {
+        const accounts: SchwabAccountDetails[] = await response.json();
+        const summary = mapAccountData(accounts);
 
-      return { data: summary, source: 'schwab', timestamp: Date.now() };
+        localStorage.setItem(ACCOUNT_CACHE_KEY, JSON.stringify({ data: summary, timestamp: Date.now() }));
+        return { data: summary, source: 'schwab', timestamp: Date.now() };
+      }
     }
   } catch (err) {
     console.warn('Schwab account fetch failed, using fallback:', err instanceof Error ? err.message : err);
@@ -92,13 +129,17 @@ function mapAccountData(accounts: SchwabAccountDetails[]): AccountSummary {
   const mapped = accounts.map((a) => ({
     accountNumber: a.securitiesAccount.accountNumber,
     type: a.securitiesAccount.type,
-    value: a.securitiesAccount.currentBalances?.liquidationValue ?? 0,
+    value: a.securitiesAccount.currentBalances?.cashBalance ?? a.securitiesAccount.currentBalances?.liquidationValue ?? 0,
     cashBalance: a.securitiesAccount.currentBalances?.cashBalance ?? 0,
     buyingPower: a.securitiesAccount.currentBalances?.buyingPower ?? 0,
   }));
 
+  // For totalValue, use the spreads account (0626) cash balance if available
+  const spreadsAcct = mapped.find(a => a.accountNumber.endsWith('0626') || a.accountNumber.endsWith('1626'));
+  const totalValue = spreadsAcct?.cashBalance ?? mapped.reduce((sum, a) => sum + a.value, 0);
+
   return {
-    totalValue: mapped.reduce((sum, a) => sum + a.value, 0),
+    totalValue,
     accounts: mapped,
   };
 }

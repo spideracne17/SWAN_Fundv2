@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
+import { initializeTokensFromFile } from '@/lib/schwab/tokenManager';
 import AppShell from '@/components/layout/AppShell';
 import LoginForm from '@/components/auth/LoginForm';
 import AccountingPage from '@/pages/AccountingPage';
@@ -11,6 +12,9 @@ import TaxPage from '@/pages/TaxPage';
 import RiskPage from '@/pages/RiskPage';
 import ImportPage from '@/pages/ImportPage';
 import SettingsPage from '@/pages/SettingsPage';
+
+// Load Schwab tokens from file into localStorage on app start
+initializeTokensFromFile();
 
 function AuthenticatedApp() {
   const { isAuthenticated, loading } = useAuth();

@@ -86,9 +86,9 @@ function TraderPage() {
 
         // Fetch account value (Schwab → cache → settings fallback)
         const acctResult = await getAccountValue();
-        // Use the spreads account (taxable) if available, otherwise total
-        const spreadsAcct = acctResult.data.accounts.find(a => a.accountNumber.endsWith('0626'));
-        setAccountValue(spreadsAcct?.value ?? acctResult.data.accounts[0]?.value ?? acctResult.data.totalValue);
+        // Use the spreads account (0626) cash balance
+        const spreadsAcct = acctResult.data.accounts.find(a => a.accountNumber.endsWith('0626') || a.accountNumber.endsWith('1626'));
+        setAccountValue(spreadsAcct?.cashBalance ?? acctResult.data.totalValue);
         setDataSource(acctResult.source);
 
         const accounting = await loadOptionsAccounting(SCHWAB_SPREADS_ACCOUNT_ID);
