@@ -6,17 +6,14 @@ import {
   type SpreadTrade,
 } from '@/lib/options/optionsAccounting';
 import { loadLocalSettings } from '@/lib/dividendEngine/localSettings';
+import { getAccountValue, type DataSource } from '@/lib/schwab/dataService';
 import TradingEnginePanel from '@/components/trader/TradingEnginePanel';
 import './TraderPage.css';
 
 /* ─── Constants ────────────────────────────────────────────────────────── */
 
-// Account value: reads from Settings (localStorage). When broker API is
-// available, replace this with a live fetch and use localStorage as fallback.
-const ACCOUNT_VALUE = loadLocalSettings().spreadsAccountValue;
 const SPREAD_WIDTH_DOLLARS = 500; // 5-point spread × $100 multiplier
 const SCHWAB_SPREADS_ACCOUNT_ID = '7oq9h56iacbrxj3';
-const TOTAL_SLOTS = Math.floor(ACCOUNT_VALUE / SPREAD_WIDTH_DOLLARS);
 
 /* ─── Helpers ──────────────────────────────────────────────────────────── */
 
@@ -76,6 +73,8 @@ function TraderPage() {
   usePageTitle('SPX Credit Spreads');
 
   const [optionsData, setOptionsData] = useState<OptionsAccountingSummary | null>(null);
+  const [accountValue, setAccountValue] = useState(loadLocalSettings().spreadsAccountValue);
+  const [dataSource, setDataSource] = useState<DataSource>('default');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -84,6 +83,14 @@ function TraderPage() {
       try {
         setLoading(true);
         setError(null);
+
+        // Fetch account value (Schwab → cache → settings fallback)
+        const acctResult = await getAccountValue();
+        // Use the spreads account (taxable) if available, otherwise total
+        const spreadsAcct = acctResult.data.accounts.find(a => a.accountNumber.endsWith('0626'));
+        setAccountValue(spreadsAcct?.value ?? acctResult.data.accounts[0]?.value ?? acctResult.data.totalValue);
+        setDataSource(acctResult.source);
+
         const accounting = await loadOptionsAccounting(SCHWAB_SPREADS_ACCOUNT_ID);
         setOptionsData(accounting);
       } catch (err) {
@@ -121,10 +128,15 @@ function TraderPage() {
   return (
     <div className="page trader-page">
       <h2>SPX Credit Spreads</h2>
-      <p className="trader-subtitle">Schwab Spreads • ...0626 • Portfolio OS v3</p>
+      <p className="trader-subtitle">
+        Schwab Spreads • ...0626 • Portfolio OS v3
+        <span className={`data-source-badge data-source-badge--${dataSource}`}>
+          {dataSource === 'schwab' ? '🟢 Live' : dataSource === 'cache' ? '🟡 Cached' : '⚪ Settings'}
+        </span>
+      </p>
 
       {/* Trading Engine (signals, market conditions, checklist, efficiency, monthly chart) */}
-      <TradingEnginePanel accountValue={ACCOUNT_VALUE} optionsData={optionsData} />
+      <TradingEnginePanel accountValue={accountValue} optionsData={optionsData} />
 
       {/* Options P&L Summary */}
       <div className="trader-card trader-card--pnl">

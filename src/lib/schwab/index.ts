@@ -33,3 +33,14 @@ export {
   initializeTokensFromFile,
   type SchwabTokens,
 } from './tokenManager';
+
+export {
+  getAccountValue,
+  getStockPrices,
+  getEnrichedQuotes,
+  isSchwabAvailable,
+  type DataSource,
+  type DataResult,
+  type AccountSummary,
+  type EnrichedQuote,
+} from './dataService';

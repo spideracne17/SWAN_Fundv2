@@ -575,3 +575,10 @@
     gap: 20px;
   }
 }
+
+/* Data source badge */
+.data-source-badge { display: inline-block; margin-left: 12px; font-size: 0.6875rem; padding: 2px 8px; border-radius: 4px; font-weight: 600; }
+.data-source-badge--schwab { background: rgba(102,187,106,0.12); color: #66bb6a; }
+.data-source-badge--cache { background: rgba(255,202,40,0.12); color: #ffca28; }
+.data-source-badge--default { background: rgba(158,158,158,0.12); color: #9e9e9e; }
+.data-source-badge--yahoo { background: rgba(79,195,247,0.12); color: #4fc3f7; }
