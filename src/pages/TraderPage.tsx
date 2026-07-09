@@ -12,6 +12,23 @@ import './TraderPage.css';
 
 /* ─── Constants ────────────────────────────────────────────────────────── */
 
+interface SchwabSpread {
+  shortSymbol: string;
+  longSymbol: string;
+  shortStrike: number;
+  longStrike: number;
+  expiration: string;
+  spreadWidth: number;
+  shortQty: number;
+  shortAvgPrice: number;
+  longAvgPrice: number;
+  netCredit: number;
+  currentShortValue: number;
+  currentLongValue: number;
+  unrealizedPnL: number;
+  dte: number;
+}
+
 const SPREAD_WIDTH_DOLLARS = 500; // 5-point spread × $100 multiplier
 const SCHWAB_SPREADS_ACCOUNT_ID = '7oq9h56iacbrxj3';
 
@@ -75,6 +92,7 @@ function TraderPage() {
   const [optionsData, setOptionsData] = useState<OptionsAccountingSummary | null>(null);
   const [accountValue, setAccountValue] = useState(loadLocalSettings().spreadsAccountValue);
   const [dataSource, setDataSource] = useState<DataSource>('default');
+  const [schwabPositions, setSchwabPositions] = useState<SchwabSpread[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -90,6 +108,78 @@ function TraderPage() {
         const spreadsAcct = acctResult.data.accounts.find(a => a.accountNumber.endsWith('0626') || a.accountNumber.endsWith('1626'));
         setAccountValue(spreadsAcct?.cashBalance ?? acctResult.data.totalValue);
         setDataSource(acctResult.source);
+
+        // Fetch live option positions from Schwab
+        try {
+          const tokenResp = await fetch('/schwab-trading-tokens.json');
+          if (tokenResp.ok) {
+            const tokens = await tokenResp.json();
+            if (tokens.access_token) {
+              const posResp = await fetch('/schwab-api/trader/v1/accounts?fields=positions', {
+                headers: { 'Authorization': `Bearer ${tokens.access_token}` },
+              });
+              if (posResp.ok) {
+                const allAccounts = await posResp.json();
+                const spreadsAccount = allAccounts.find((a: { securitiesAccount: { accountNumber: string } }) =>
+                  a.securitiesAccount.accountNumber.endsWith('1626') || a.securitiesAccount.accountNumber.endsWith('0626')
+                );
+                const positions = spreadsAccount?.securitiesAccount?.positions ?? [];
+                const optionPositions = positions.filter((p: { instrument: { assetType: string } }) => p.instrument.assetType === 'OPTION');
+
+                // Pair into spreads (short + long at same expiry)
+                const shorts = optionPositions.filter((p: { shortQuantity: number }) => p.shortQuantity > 0);
+                const longs = optionPositions.filter((p: { longQuantity: number }) => p.longQuantity > 0);
+                const spreads: SchwabSpread[] = [];
+
+                for (const short of shorts) {
+                  // Parse option symbol: SPX   YYMMDDP/CSTRIKE
+                  const shortSym = short.instrument.symbol as string;
+                  const shortMatch = shortSym.match(/(\d{6})([PC])(\d+)/);
+                  if (!shortMatch) continue;
+
+                  const expStr = shortMatch[1]; // YYMMDD
+                  const shortStrike = parseInt(shortMatch[3]) / 1000;
+
+                  // Find matching long leg (same expiry, nearby strike)
+                  const longLeg = longs.find((l: { instrument: { symbol: string } }) => {
+                    const lSym = l.instrument.symbol as string;
+                    return lSym.includes(expStr);
+                  });
+
+                  const longSym = longLeg?.instrument?.symbol ?? '';
+                  const longMatch = longSym.match(/(\d{6})([PC])(\d+)/);
+                  const longStrike = longMatch ? parseInt(longMatch[3]) / 1000 : shortStrike - 5;
+
+                  const exp = `20${expStr.slice(0,2)}-${expStr.slice(2,4)}-${expStr.slice(4,6)}`;
+                  const dte = Math.round((new Date(exp + 'T16:00:00').getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+
+                  const netCredit = (short.averagePrice - (longLeg?.averagePrice ?? 0));
+
+                  spreads.push({
+                    shortSymbol: shortSym,
+                    longSymbol: longSym,
+                    shortStrike,
+                    longStrike,
+                    expiration: exp,
+                    spreadWidth: Math.abs(shortStrike - longStrike),
+                    shortQty: short.shortQuantity,
+                    shortAvgPrice: short.averagePrice,
+                    longAvgPrice: longLeg?.averagePrice ?? 0,
+                    netCredit,
+                    currentShortValue: Math.abs(short.marketValue) / 100,
+                    currentLongValue: longLeg ? Math.abs(longLeg.marketValue) / 100 : 0,
+                    unrealizedPnL: (netCredit - (Math.abs(short.marketValue) / 100 - (longLeg ? Math.abs(longLeg.marketValue) / 100 : 0))),
+                    dte,
+                  });
+                }
+
+                setSchwabPositions(spreads);
+              }
+            }
+          }
+        } catch (err) {
+          console.warn('Failed to fetch Schwab positions:', err);
+        }
 
         const accounting = await loadOptionsAccounting(SCHWAB_SPREADS_ACCOUNT_ID);
         setOptionsData(accounting);
@@ -173,7 +263,49 @@ function TraderPage() {
         </div>
       </div>
 
-      {/* Open Positions */}
+      {/* Open Positions — Live from Schwab */}
+      {schwabPositions.length > 0 && (
+        <div className="trader-card trader-card--positions">
+          <h3>Open Positions <span className="data-source-badge data-source-badge--schwab">🟢 Live</span></h3>
+          <div className="positions-table-wrapper">
+            <table className="positions-table">
+              <thead>
+                <tr>
+                  <th>Expiration</th>
+                  <th>DTE</th>
+                  <th>Short Strike</th>
+                  <th>Long Strike</th>
+                  <th>Width</th>
+                  <th>Net Credit</th>
+                  <th>Current Value</th>
+                  <th>P&L</th>
+                </tr>
+              </thead>
+              <tbody>
+                {schwabPositions.map((sp, i) => {
+                  const dteClass = sp.dte <= 7 ? 'dte--urgent' : sp.dte <= 21 ? 'dte--warning' : '';
+                  return (
+                    <tr key={i}>
+                      <td>{sp.expiration}</td>
+                      <td className={dteClass}>{sp.dte}</td>
+                      <td className="strike-value">{formatPrice(sp.shortStrike)}</td>
+                      <td className="strike-value">{formatPrice(sp.longStrike)}</td>
+                      <td>${sp.spreadWidth}</td>
+                      <td className="pnl--positive">{formatCurrencyDecimal(sp.netCredit)}</td>
+                      <td>{formatCurrencyDecimal(sp.currentShortValue - sp.currentLongValue)}</td>
+                      <td className={sp.unrealizedPnL >= 0 ? 'pnl--positive' : 'pnl--negative'}>
+                        {formatCurrencyDecimal(sp.unrealizedPnL)}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Open Positions — From PocketBase (fallback) */}
       {optionsData && optionsData.openPositions.length > 0 && (
         <div className="trader-card trader-card--positions">
           <h3>Open Positions</h3>

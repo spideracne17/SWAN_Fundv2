@@ -67,56 +67,127 @@ function RetirementPage() {
         setLoading(true);
         setError(null);
 
-        // Fetch tax lots, cash transactions, and VGT price in parallel
-        // Gracefully handle missing collections (fresh PocketBase)
-        const [lots, txns, prices] = await Promise.all([
-          pb.collection('tax_lots').getFullList<TaxLot>({ requestKey: null }).catch(() => [] as TaxLot[]),
-          pb.collection('cash_transactions').getFullList<CashTransaction>({ requestKey: null }).catch(() => [] as CashTransaction[]),
-          fetchStockPrices(['VGT']),
-        ]);
+        // Try Schwab API first for account data
+        let schwabSuccess = false;
+        try {
+          const tokenResp = await fetch('/schwab-trading-tokens.json');
+          if (tokenResp.ok) {
+            const tokens = await tokenResp.json();
+            if (tokens.access_token) {
+              const posResp = await fetch('/schwab-api/trader/v1/accounts?fields=positions', {
+                headers: { 'Authorization': `Bearer ${tokens.access_token}` },
+              });
+              if (posResp.ok) {
+                const allAccounts = await posResp.json();
 
-        const price = prices.get('VGT') ?? null;
-        setVgtPrice(price);
+                // Find Roth (...0212) and Traditional (...0617) accounts
+                const rothAcct = allAccounts.find((a: { securitiesAccount: { accountNumber: string } }) =>
+                  a.securitiesAccount.accountNumber.endsWith('8212')
+                );
+                const tradAcct = allAccounts.find((a: { securitiesAccount: { accountNumber: string } }) =>
+                  a.securitiesAccount.accountNumber.endsWith('9617')
+                );
 
-        // Aggregate positions by account
-        const aggregate = (accountId: string): AccountData => {
-          const accountLots = lots.filter((l) => l.account_id === accountId);
-          const shares = accountLots.reduce((sum, l) => sum + parseFloat(l.remaining_shares || '0'), 0);
-          const costBasis = accountLots.reduce((sum, l) => sum + parseFloat(l.total_cost_basis || '0'), 0);
-          const marketValue = price ? shares * price : null;
-          return { shares, costBasis, marketValue };
-        };
+                if (rothAcct || tradAcct) {
+                  const mapAccount = (acct: { securitiesAccount: { positions?: { longQuantity: number; averagePrice: number; marketValue: number }[]; currentBalances?: { liquidationValue: number } } } | undefined): AccountData => {
+                    if (!acct) return { shares: 0, costBasis: 0, marketValue: null };
+                    const positions = acct.securitiesAccount.positions ?? [];
+                    const shares = positions.reduce((s: number, p: { longQuantity: number }) => s + (p.longQuantity || 0), 0);
+                    const costBasis = positions.reduce((s: number, p: { longQuantity: number; averagePrice: number }) => s + (p.longQuantity || 0) * (p.averagePrice || 0), 0);
+                    const marketValue = acct.securitiesAccount.currentBalances?.liquidationValue ?? null;
+                    return { shares, costBasis, marketValue };
+                  };
 
-        setRoth(aggregate(ROTH_ACCOUNT_ID));
-        setTrad(aggregate(TRAD_ACCOUNT_ID));
+                  setRoth(mapAccount(rothAcct));
+                  setTrad(mapAccount(tradAcct));
 
-        // Calculate YTD contributions (transfers into IRA accounts this year)
-        const currentYear = new Date().getFullYear();
-        const yearStart = `${currentYear}-01-01`;
-        const currentMonth = new Date().getMonth(); // 0-indexed
+                  // Get VGT price from the position data
+                  const anyPos = (rothAcct?.securitiesAccount?.positions ?? tradAcct?.securitiesAccount?.positions ?? [])[0];
+                  if (anyPos && anyPos.marketValue && anyPos.longQuantity) {
+                    setVgtPrice(anyPos.marketValue / anyPos.longQuantity);
+                  }
 
-        const iraTransfers = txns.filter(
-          (t) =>
-            (t.account_id === ROTH_ACCOUNT_ID || t.account_id === TRAD_ACCOUNT_ID) &&
-            t.transaction_type === 'transfer' &&
-            t.transaction_date >= yearStart &&
-            parseFloat(t.total_amount || '0') > 0
-        );
+                  schwabSuccess = true;
+                }
 
-        const ytdDeposited = iraTransfers.reduce(
-          (sum, t) => sum + parseFloat(t.total_amount || '0'),
-          0
-        );
-        const remaining = Math.max(0, IRA_LIMIT - ytdDeposited);
-        const monthsRemaining = Math.max(1, 12 - currentMonth);
-        const monthlyTarget = IRA_LIMIT / 12;
-        const adjustedMonthly = remaining / monthsRemaining;
+                // Calculate contributions — fixed $583.33/month to Roth
+                const currentYear = new Date().getFullYear();
+                const currentMonth = new Date().getMonth(); // 0-indexed (0=Jan, 6=Jul)
+                const monthlyContrib = 583.33;
+                const monthsContributed = currentMonth + 1; // Jan=1 through current month
+                const ytdDeposited = monthsContributed * monthlyContrib;
+                const deposits: { date: string; amount: number }[] = [];
+                for (let m = 0; m < monthsContributed; m++) {
+                  const month = String(m + 1).padStart(2, '0');
+                  deposits.push({ date: `${currentYear}-${month}-03`, amount: monthlyContrib });
+                }
 
-        const deposits = iraTransfers
-          .map((t) => ({ date: t.transaction_date, amount: parseFloat(t.total_amount || '0') }))
-          .sort((a, b) => a.date.localeCompare(b.date));
+                const remaining = Math.max(0, IRA_LIMIT - ytdDeposited);
+                const monthsRemaining = Math.max(1, 12 - (currentMonth + 1));
+                const monthlyTarget = IRA_LIMIT / 12;
+                const adjustedMonthly = remaining / monthsRemaining;
 
-        setContributions({ ytdDeposited, remaining, monthlyTarget, adjustedMonthly, monthsRemaining, deposits });
+                setContributions({
+                  ytdDeposited,
+                  remaining,
+                  monthlyTarget,
+                  adjustedMonthly,
+                  monthsRemaining,
+                  deposits: deposits.sort((a, b) => a.date.localeCompare(b.date)),
+                });
+              }
+            }
+          }
+        } catch (err) {
+          console.warn('Schwab retirement data failed, trying PocketBase:', err);
+        }
+
+        // Fallback to PocketBase if Schwab failed
+        if (!schwabSuccess) {
+          const [lots, txns, prices] = await Promise.all([
+            pb.collection('tax_lots').getFullList<TaxLot>({ requestKey: null }).catch(() => [] as TaxLot[]),
+            pb.collection('cash_transactions').getFullList<CashTransaction>({ requestKey: null }).catch(() => [] as CashTransaction[]),
+            fetchStockPrices(['VGT']),
+          ]);
+
+          const price = prices.get('VGT') ?? null;
+          setVgtPrice(price);
+
+          const aggregate = (accountId: string): AccountData => {
+            const accountLots = lots.filter((l) => l.account_id === accountId);
+            const shares = accountLots.reduce((sum, l) => sum + parseFloat(l.remaining_shares || '0'), 0);
+            const costBasis = accountLots.reduce((sum, l) => sum + parseFloat(l.total_cost_basis || '0'), 0);
+            const marketValue = price ? shares * price : null;
+            return { shares, costBasis, marketValue };
+          };
+
+          setRoth(aggregate(ROTH_ACCOUNT_ID));
+          setTrad(aggregate(TRAD_ACCOUNT_ID));
+
+          const currentYear = new Date().getFullYear();
+          const yearStart = `${currentYear}-01-01`;
+          const currentMonth = new Date().getMonth();
+
+          const iraTransfers = txns.filter(
+            (t) =>
+              (t.account_id === ROTH_ACCOUNT_ID || t.account_id === TRAD_ACCOUNT_ID) &&
+              t.transaction_type === 'transfer' &&
+              t.transaction_date >= yearStart &&
+              parseFloat(t.total_amount || '0') > 0
+          );
+
+          const ytdDeposited = iraTransfers.reduce((sum, t) => sum + parseFloat(t.total_amount || '0'), 0);
+          const remaining = Math.max(0, IRA_LIMIT - ytdDeposited);
+          const monthsRemaining = Math.max(1, 12 - currentMonth);
+          const monthlyTarget = IRA_LIMIT / 12;
+          const adjustedMonthly = remaining / monthsRemaining;
+
+          const deposits = iraTransfers
+            .map((t) => ({ date: t.transaction_date, amount: parseFloat(t.total_amount || '0') }))
+            .sort((a, b) => a.date.localeCompare(b.date));
+
+          setContributions({ ytdDeposited, remaining, monthlyTarget, adjustedMonthly, monthsRemaining, deposits });
+        }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load retirement data');
       } finally {
