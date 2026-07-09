@@ -108,6 +108,14 @@ function RetirementPage() {
                   }
 
                   schwabSuccess = true;
+
+                  // Cache for offline fallback
+                  localStorage.setItem('schwab_retirement_cache', JSON.stringify({
+                    roth: mapAccount(rothAcct),
+                    trad: mapAccount(tradAcct),
+                    vgtPrice: anyPos ? anyPos.marketValue / anyPos.longQuantity : null,
+                    timestamp: Date.now(),
+                  }));
                 }
 
                 // Calculate contributions — fixed $583.33/month to Roth
@@ -142,7 +150,20 @@ function RetirementPage() {
           console.warn('Schwab retirement data failed, trying PocketBase:', err);
         }
 
-        // Fallback to PocketBase if Schwab failed
+        // Fallback: try localStorage cache, then PocketBase
+        if (!schwabSuccess) {
+          try {
+            const cached = localStorage.getItem('schwab_retirement_cache');
+            if (cached) {
+              const { roth: cachedRoth, trad: cachedTrad, vgtPrice: cachedPrice } = JSON.parse(cached);
+              setRoth(cachedRoth);
+              setTrad(cachedTrad);
+              if (cachedPrice) setVgtPrice(cachedPrice);
+              schwabSuccess = true; // Skip PocketBase
+            }
+          } catch { /* ignore */ }
+        }
+
         if (!schwabSuccess) {
           const [lots, txns, prices] = await Promise.all([
             pb.collection('tax_lots').getFullList<TaxLot>({ requestKey: null }).catch(() => [] as TaxLot[]),
