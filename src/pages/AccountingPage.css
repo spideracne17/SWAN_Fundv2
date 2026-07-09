@@ -322,3 +322,12 @@
   border-top: 3px solid #4fc3f7;
   padding-top: 10px;
 }
+
+/* Data source badge */
+.data-source-badge { display: inline-block; margin-left: 12px; font-size: 0.6875rem; padding: 2px 8px; border-radius: 4px; font-weight: 600; }
+.data-source-badge--schwab { background: rgba(102,187,106,0.12); color: #66bb6a; }
+
+/* Schwab positions section */
+.accounting-table-section { margin-bottom: 24px; }
+.accounting-table-section h3 { font-size: 1rem; margin-bottom: 12px; }
+.symbol-cell { font-weight: 700; color: #4fc3f7; }

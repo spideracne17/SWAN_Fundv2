@@ -16,6 +16,27 @@ import { fetchStockPrices } from '@/lib/market/fetchStockPrices';
 import { fetchFundamentals, type StockFundamentals } from '@/lib/market/fetchFundamentals';
 import './AccountingPage.css';
 
+interface SchwabLivePosition {
+  accountNumber: string;
+  accountLabel: string;
+  symbol: string;
+  assetType: string;
+  quantity: number;
+  averagePrice: number;
+  marketValue: number;
+  costBasis: number;
+  unrealizedGL: number;
+  unrealizedGLPct: number;
+}
+
+interface SchwabAccountSummary {
+  accountNumber: string;
+  label: string;
+  totalValue: number;
+  cashBalance: number;
+  positions: SchwabLivePosition[];
+}
+
 /** Robinhood account ID */
 const ROBINHOOD_ACCOUNT_ID = 'pd64pe7tiyvwro8';
 const ROTH_ACCOUNT_ID = 'vlubeg30nl05mm9';
@@ -144,6 +165,8 @@ function AccountingPage() {
   const [netWorth, setNetWorth] = useState<NetWorthBreakdown | null>(null);
   const [fundamentals, setFundamentals] = useState<Map<string, StockFundamentals>>(new Map());
   const [prices, setPrices] = useState<Map<string, number>>(new Map());
+  const [schwabAccounts, setSchwabAccounts] = useState<SchwabAccountSummary[]>([]);
+  const [schwabTotalValue, setSchwabTotalValue] = useState<number>(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -151,6 +174,83 @@ function AccountingPage() {
     try {
       setLoading(true);
       setError(null);
+
+      // Try Schwab first for live positions
+      try {
+        const tokenResp = await fetch('/schwab-trading-tokens.json');
+        if (tokenResp.ok) {
+          const tokens = await tokenResp.json();
+          if (tokens.access_token) {
+            const posResp = await fetch('/schwab-api/trader/v1/accounts?fields=positions', {
+              headers: { 'Authorization': `Bearer ${tokens.access_token}` },
+            });
+            if (posResp.ok) {
+              const allAccounts = await posResp.json();
+              const accountLabels: Record<string, string> = {
+                '89488212': 'Roth IRA',
+                '97149617': 'Traditional IRA',
+                '76771626': 'Schwab Spreads',
+              };
+
+              const summaries: SchwabAccountSummary[] = [];
+              let total = 0;
+
+              for (const acct of allAccounts) {
+                const sa = acct.securitiesAccount;
+                const acctNum = sa.accountNumber;
+                const value = sa.currentBalances?.liquidationValue ?? 0;
+                total += value;
+
+                const positions: SchwabLivePosition[] = (sa.positions ?? [])
+                  .filter((p: { instrument: { assetType: string } }) => p.instrument.assetType !== 'CURRENCY')
+                  .map((p: { instrument: { symbol: string; assetType: string }; longQuantity: number; shortQuantity: number; averagePrice: number; marketValue: number; currentDayProfitLoss: number; currentDayProfitLossPercentage: number }) => {
+                    const qty = p.longQuantity || -(p.shortQuantity || 0);
+                    const cost = Math.abs(qty) * p.averagePrice;
+                    const mktVal = p.marketValue;
+                    const gl = mktVal - cost;
+                    return {
+                      accountNumber: acctNum,
+                      accountLabel: accountLabels[acctNum] ?? `...${acctNum.slice(-4)}`,
+                      symbol: p.instrument.symbol,
+                      assetType: p.instrument.assetType,
+                      quantity: qty,
+                      averagePrice: p.averagePrice,
+                      marketValue: mktVal,
+                      costBasis: cost,
+                      unrealizedGL: gl,
+                      unrealizedGLPct: cost > 0 ? (gl / cost) * 100 : 0,
+                    };
+                  });
+
+                summaries.push({
+                  accountNumber: acctNum,
+                  label: accountLabels[acctNum] ?? `...${acctNum.slice(-4)}`,
+                  totalValue: value,
+                  cashBalance: sa.currentBalances?.cashBalance ?? 0,
+                  positions,
+                });
+              }
+
+              setSchwabAccounts(summaries);
+              setSchwabTotalValue(total);
+
+              // Cache
+              localStorage.setItem('schwab_portfolio_cache', JSON.stringify({ accounts: summaries, total, timestamp: Date.now() }));
+            }
+          }
+        }
+      } catch (err) {
+        console.warn('Schwab portfolio fetch failed:', err);
+        // Try cache
+        try {
+          const cached = localStorage.getItem('schwab_portfolio_cache');
+          if (cached) {
+            const { accounts, total } = JSON.parse(cached);
+            setSchwabAccounts(accounts);
+            setSchwabTotalValue(total);
+          }
+        } catch { /* ignore */ }
+      }
 
       const [accounting, realized] = await Promise.all([
         fetchAccountingData(),
@@ -250,6 +350,63 @@ function AccountingPage() {
     <div className="page accounting-page">
       <h2>Portfolio</h2>
       <p>Cost basis, market value, unrealized/realized gains, and net worth.</p>
+
+      {/* Schwab Live Summary */}
+      {schwabAccounts.length > 0 && (
+        <div className="accounting-cards">
+          <div className="accounting-card">
+            <p className="accounting-card-label">Total Portfolio Value</p>
+            <p className="accounting-card-value">{formatCurrency(schwabTotalValue)}</p>
+          </div>
+          {schwabAccounts.map((acct) => (
+            <div key={acct.accountNumber} className="accounting-card">
+              <p className="accounting-card-label">{acct.label}</p>
+              <p className="accounting-card-value">{formatCurrency(acct.totalValue)}</p>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Schwab Live Positions Table */}
+      {schwabAccounts.length > 0 && (
+        <div className="accounting-table-section">
+          <h3>All Positions <span className="data-source-badge data-source-badge--schwab">🟢 Live</span></h3>
+          <div className="table-wrapper">
+            <table className="accounting-table">
+              <thead>
+                <tr>
+                  <th>Account</th>
+                  <th>Symbol</th>
+                  <th>Type</th>
+                  <th className="numeric">Shares</th>
+                  <th className="numeric">Avg Cost</th>
+                  <th className="numeric">Cost Basis</th>
+                  <th className="numeric">Market Value</th>
+                  <th className="numeric">Unrealized G/L</th>
+                  <th className="numeric">%</th>
+                </tr>
+              </thead>
+              <tbody>
+                {schwabAccounts.flatMap((acct) =>
+                  acct.positions.map((pos) => (
+                    <tr key={`${acct.accountNumber}-${pos.symbol}`}>
+                      <td><span className={`account-badge account-badge--${acct.label.toLowerCase().replace(/\s+/g, '')}`}>{acct.label}</span></td>
+                      <td className="symbol-cell">{pos.symbol.split(/\s+/)[0]}</td>
+                      <td>{pos.assetType}</td>
+                      <td className="numeric">{pos.quantity.toFixed(pos.assetType === 'OPTION' ? 0 : 4)}</td>
+                      <td className="numeric">{formatCurrency(pos.averagePrice)}</td>
+                      <td className="numeric">{formatCurrency(pos.costBasis)}</td>
+                      <td className="numeric">{formatCurrency(pos.marketValue)}</td>
+                      <td className={`numeric ${pos.unrealizedGL >= 0 ? 'positive' : 'negative'}`}>{formatCurrency(pos.unrealizedGL)}</td>
+                      <td className={`numeric ${pos.unrealizedGLPct >= 0 ? 'positive' : 'negative'}`}>{pos.unrealizedGLPct.toFixed(1)}%</td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       {/* Summary Cards */}
       <div className="accounting-cards">
