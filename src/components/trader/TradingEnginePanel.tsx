@@ -30,6 +30,7 @@ import './TradingEnginePanel.css';
 interface Props {
   accountValue: number;
   optionsData: OptionsAccountingSummary | null;
+  liveOpenCount?: number;
 }
 
 function fmt(n: number): string {
@@ -44,7 +45,7 @@ function fmtPrice(n: number): string {
   return n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-export default function TradingEnginePanel({ accountValue, optionsData }: Props) {
+export default function TradingEnginePanel({ accountValue, optionsData, liveOpenCount = 0 }: Props) {
   const [signal, setSignal] = useState<TradingSignal | null>(null);
   const [data, setData] = useState<ExtendedMarketData | null>(null);
   const [heat, setHeat] = useState<PortfolioHeatData | null>(null);
@@ -91,7 +92,7 @@ export default function TradingEnginePanel({ accountValue, optionsData }: Props)
           vix20DayAgo: mktData.vix20DayAgo,
           spxPrice: mktData.spxPrice,
           spx20DayAgo: mktData.spx20DayAgo,
-          openPositionsCount: openPositions.length,
+          openPositionsCount: liveOpenCount || openPositions.length,
           threatenedPositionsCount: 0,
           spx200DMA: mktData.spx200DMA,
           portfolioHeatPct: heatData.heatPct,
@@ -118,7 +119,7 @@ export default function TradingEnginePanel({ accountValue, optionsData }: Props)
 
         const completed = [...(optionsData?.closedPositions ?? []), ...(optionsData?.expiredPositions ?? [])];
         const metrics = calculateSlotMetrics(completed, accountValue);
-        metrics.activeSlots = openPositions.length;
+        metrics.activeSlots = liveOpenCount || openPositions.length;
         setSlotMetrics(metrics);
       }
       setLoading(false);
@@ -440,7 +441,7 @@ export default function TradingEnginePanel({ accountValue, optionsData }: Props)
             </div>
             <div className="engine-eff-item">
               <span className="engine-eff-label">Open</span>
-              <span className="engine-eff-value">{optionsData?.openPositions.length ?? 0}</span>
+              <span className="engine-eff-value">{liveOpenCount || (optionsData?.openPositions.length ?? 0)}</span>
             </div>
             <div className="engine-eff-item">
               <span className="engine-eff-label">Win Rate</span>

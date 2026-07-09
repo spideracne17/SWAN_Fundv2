@@ -226,42 +226,57 @@ function TraderPage() {
       </p>
 
       {/* Trading Engine (signals, market conditions, checklist, efficiency, monthly chart) */}
-      <TradingEnginePanel accountValue={accountValue} optionsData={optionsData} />
+      <TradingEnginePanel accountValue={accountValue} optionsData={optionsData} liveOpenCount={schwabPositions.length} />
 
       {/* Options P&L Summary */}
-      <div className="trader-card trader-card--pnl">
-        <h3>Options P&L</h3>
-        <div className="pnl-grid">
-          <div className="pnl-card pnl-card--exposure">
-            <span className="pnl-card-label">Max Loss Exposure</span>
-            <span className="pnl-card-value pnl--negative">
-              {formatCurrency(optionsData?.maxLossExposure ?? 0)}
-            </span>
-            <span className="pnl-card-sub">Collateral reserved</span>
+      {(() => {
+        // Use Schwab live data if available, otherwise fall back to PocketBase
+        const liveMaxLoss = schwabPositions.length > 0
+          ? schwabPositions.reduce((sum, sp) => sum + (sp.spreadWidth * 100 - sp.netCredit * 100), 0)
+          : (optionsData?.maxLossExposure ?? 0);
+        const liveUnrealizedPnL = schwabPositions.length > 0
+          ? schwabPositions.reduce((sum, sp) => sum + sp.unrealizedPnL * 100, 0)
+          : (optionsData?.totalUnrealizedPnL ?? 0);
+        const livePremium = schwabPositions.length > 0
+          ? schwabPositions.reduce((sum, sp) => sum + sp.netCredit * 100, 0)
+          : (optionsData?.totalPremiumReceived ?? 0);
+
+        return (
+          <div className="trader-card trader-card--pnl">
+            <h3>Options P&L</h3>
+            <div className="pnl-grid">
+              <div className="pnl-card pnl-card--exposure">
+                <span className="pnl-card-label">Max Loss Exposure</span>
+                <span className="pnl-card-value pnl--negative">
+                  {formatCurrency(liveMaxLoss)}
+                </span>
+                <span className="pnl-card-sub">Collateral reserved</span>
+              </div>
+              <div className="pnl-card pnl-card--unrealized">
+                <span className="pnl-card-label">Unrealized (Open)</span>
+                <span className={`pnl-card-value ${getPnLClass(liveUnrealizedPnL)}`}>
+                  {formatCurrencyDecimal(liveUnrealizedPnL)}
+                </span>
+                <span className="pnl-card-sub">Premium received, not yet expired</span>
+              </div>
+              <div className="pnl-card pnl-card--realized">
+                <span className="pnl-card-label">Realized P&L</span>
+                <span className={`pnl-card-value ${getPnLClass(optionsData?.totalRealizedPnL ?? 0)}`}>
+                  {formatCurrencyDecimal(optionsData?.totalRealizedPnL ?? 0)}
+                </span>
+                <span className="pnl-card-sub">Closed + expired trades</span>
+              </div>
+              <div className="pnl-card pnl-card--total">
+                <span className="pnl-card-label">Total Premium Received</span>
+                <span className="pnl-card-value pnl--positive">
+                  {formatCurrencyDecimal(livePremium)}
+                </span>
+                <span className="pnl-card-sub">{schwabPositions.length > 0 ? 'Open positions' : 'All time'}</span>
+              </div>
+            </div>
           </div>
-          <div className="pnl-card pnl-card--unrealized">
-            <span className="pnl-card-label">Unrealized (Open)</span>
-            <span className={`pnl-card-value ${getPnLClass(optionsData?.totalUnrealizedPnL ?? 0)}`}>
-              {formatCurrencyDecimal(optionsData?.totalUnrealizedPnL ?? 0)}
-            </span>
-            <span className="pnl-card-sub">Premium received, not yet expired</span>
-          </div>
-          <div className="pnl-card pnl-card--realized">
-            <span className="pnl-card-label">Realized P&L</span>
-            <span className={`pnl-card-value ${getPnLClass(optionsData?.totalRealizedPnL ?? 0)}`}>
-              {formatCurrencyDecimal(optionsData?.totalRealizedPnL ?? 0)}
-            </span>
-            <span className="pnl-card-sub">Closed + expired trades</span>
-          </div>
-          <div className="pnl-card pnl-card--total">
-            <span className="pnl-card-label">Total Premium Received</span>
-            <span className="pnl-card-value pnl--positive">
-              {formatCurrencyDecimal(optionsData?.totalPremiumReceived ?? 0)}
-            </span>
-            <span className="pnl-card-sub">All time</span>
-          </div>
-        </div>
-      </div>
+        );
+      })()}
 
       {/* Open Positions — Live from Schwab */}
       {schwabPositions.length > 0 && (
