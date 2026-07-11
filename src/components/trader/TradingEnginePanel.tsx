@@ -333,7 +333,7 @@ export default function TradingEnginePanel({ accountValue, optionsData, liveOpen
               {heat.heatLevel} (target 20-30%)
             </div>
             <div className="engine-range-row">
-              <span>Open Risk</span><span>{fmt(heat.totalOpenRisk)}</span>
+              <span>Open Risk</span><span>{fmt(liveOpenCount > 0 ? liveOpenCount * 500 : heat.totalOpenRisk)}</span>
             </div>
             <div className="engine-range-row engine-range-row--highlight">
               <span>Cash Available</span><span>{fmt(accountValue)}</span>
@@ -342,7 +342,7 @@ export default function TradingEnginePanel({ accountValue, optionsData, liveOpen
               <span>Available (30% risk cap)</span><span>{fmt(heat.availableNewRisk)}</span>
             </div>
             <div className="engine-range-row">
-              <span>Slots</span><span>{heat.slotsOpen} / {heat.slotsTotal}</span>
+              <span>Slots</span><span>{liveOpenCount || heat.slotsOpen} / {heat.slotsTotal}</span>
             </div>
           </div>
         )}
