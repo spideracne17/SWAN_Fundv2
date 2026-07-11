@@ -38,9 +38,9 @@ interface SchwabAccountSummary {
 }
 
 /** Robinhood account ID */
-const ROBINHOOD_ACCOUNT_ID = 'pd64pe7tiyvwro8';
-const ROTH_ACCOUNT_ID = 'vlubeg30nl05mm9';
-const TRAD_ACCOUNT_ID = 'ncyrg5kkqts2e0r';
+const ROBINHOOD_ACCOUNT_ID = 'f40o2d14e4a5r06';
+const ROTH_ACCOUNT_ID = 'v22i77x6vd97w8w';
+const TRAD_ACCOUNT_ID = '69o8emiuvma4ty9';
 const IRA_ACCOUNT_IDS = [ROTH_ACCOUNT_ID, TRAD_ACCOUNT_ID];
 
 /** Format a number as USD currency string */
@@ -142,10 +142,10 @@ function getPEClass(pe: number | null | undefined): string {
 
 /** Account badge mapping */
 const ACCOUNT_BADGE_MAP: Record<string, { label: string; className: string }> = {
-  '7oq9h56iacbrxj3': { label: 'Spreads', className: 'account-badge--spreads' },
-  'pd64pe7tiyvwro8': { label: 'Robinhood', className: 'account-badge--robinhood' },
-  'vlubeg30nl05mm9': { label: 'Roth', className: 'account-badge--roth' },
-  'ncyrg5kkqts2e0r': { label: 'Traditional', className: 'account-badge--traditional' },
+  '562upqkz5ba4e16': { label: 'Spreads', className: 'account-badge--spreads' },
+  'f40o2d14e4a5r06': { label: 'Robinhood', className: 'account-badge--robinhood' },
+  'v22i77x6vd97w8w': { label: 'Roth', className: 'account-badge--roth' },
+  '69o8emiuvma4ty9': { label: 'Traditional', className: 'account-badge--traditional' },
 };
 
 function AccountBadge({ accountId }: { accountId?: string }) {
@@ -351,63 +351,6 @@ function AccountingPage() {
       <h2>Portfolio</h2>
       <p>Cost basis, market value, unrealized/realized gains, and net worth.</p>
 
-      {/* Schwab Live Summary */}
-      {schwabAccounts.length > 0 && (
-        <div className="accounting-cards">
-          <div className="accounting-card">
-            <p className="accounting-card-label">Total Portfolio Value</p>
-            <p className="accounting-card-value">{formatCurrency(schwabTotalValue)}</p>
-          </div>
-          {schwabAccounts.map((acct) => (
-            <div key={acct.accountNumber} className="accounting-card">
-              <p className="accounting-card-label">{acct.label}</p>
-              <p className="accounting-card-value">{formatCurrency(acct.totalValue)}</p>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Schwab Live Positions Table */}
-      {schwabAccounts.length > 0 && (
-        <div className="accounting-table-section">
-          <h3>All Positions <span className="data-source-badge data-source-badge--schwab">🟢 Live</span></h3>
-          <div className="table-wrapper">
-            <table className="accounting-table">
-              <thead>
-                <tr>
-                  <th>Account</th>
-                  <th>Symbol</th>
-                  <th>Type</th>
-                  <th className="numeric">Shares</th>
-                  <th className="numeric">Avg Cost</th>
-                  <th className="numeric">Cost Basis</th>
-                  <th className="numeric">Market Value</th>
-                  <th className="numeric">Unrealized G/L</th>
-                  <th className="numeric">%</th>
-                </tr>
-              </thead>
-              <tbody>
-                {schwabAccounts.flatMap((acct) =>
-                  acct.positions.map((pos) => (
-                    <tr key={`${acct.accountNumber}-${pos.symbol}`}>
-                      <td><span className={`account-badge account-badge--${acct.label.toLowerCase().replace(/\s+/g, '')}`}>{acct.label}</span></td>
-                      <td className="symbol-cell">{pos.symbol.split(/\s+/)[0]}</td>
-                      <td>{pos.assetType}</td>
-                      <td className="numeric">{pos.quantity.toFixed(pos.assetType === 'OPTION' ? 0 : 4)}</td>
-                      <td className="numeric">{formatCurrency(pos.averagePrice)}</td>
-                      <td className="numeric">{formatCurrency(pos.costBasis)}</td>
-                      <td className="numeric">{formatCurrency(pos.marketValue)}</td>
-                      <td className={`numeric ${pos.unrealizedGL >= 0 ? 'positive' : 'negative'}`}>{formatCurrency(pos.unrealizedGL)}</td>
-                      <td className={`numeric ${pos.unrealizedGLPct >= 0 ? 'positive' : 'negative'}`}>{pos.unrealizedGLPct.toFixed(1)}%</td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
       {/* Summary Cards */}
       <div className="accounting-cards">
         <div className="accounting-card">
@@ -416,25 +359,18 @@ function AccountingPage() {
             {accountingData ? formatCurrency(accountingData.cost_basis_total) : 'N/A'}
           </p>
         </div>
-
         <div className="accounting-card">
           <p className="accounting-card-label">Market Value (if you sold today)</p>
           <p className={`accounting-card-value ${accountingData?.market_value_total == null ? 'na' : ''}`}>
-            {accountingData?.market_value_total != null
-              ? formatCurrency(accountingData.market_value_total)
-              : 'N/A'}
+            {accountingData?.market_value_total != null ? formatCurrency(accountingData.market_value_total) : 'N/A'}
           </p>
         </div>
-
         <div className="accounting-card">
           <p className="accounting-card-label">Unrealized G/L (How much you could make)</p>
           <p className={`accounting-card-value ${gainLossClass(accountingData?.unrealized_gain_loss)}`}>
-            {accountingData?.unrealized_gain_loss != null
-              ? formatCurrency(accountingData.unrealized_gain_loss)
-              : 'N/A'}
+            {accountingData?.unrealized_gain_loss != null ? formatCurrency(accountingData.unrealized_gain_loss) : 'N/A'}
           </p>
         </div>
-
         <div className="accounting-card">
           <p className="accounting-card-label">Realized G/L (How much you've profited so far)</p>
           <p className={`accounting-card-value ${realizedGL ? gainLossClass(realizedGL.total) : 'na'}`}>
@@ -443,7 +379,7 @@ function AccountingPage() {
         </div>
       </div>
 
-      {/* Positions Table */}
+      {/* Detailed Positions Table (PocketBase — Robinhood + historical) */}
       <h3 className="accounting-section-title">Positions</h3>
       <div className="accounting-table-wrapper">
         <table className="accounting-table">
