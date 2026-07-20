@@ -404,8 +404,10 @@ function AccountingPage() {
             </tr>
           </thead>
           <tbody>
+            {/* Robinhood positions from PocketBase (only Robinhood account) */}
             {accountingData && accountingData.positions.length > 0 ? (
               accountingData.positions
+                .filter(p => p.account_id === ROBINHOOD_ACCOUNT_ID)
                 .filter(p => !['SLVO', 'EV', 'T1', 'TSLA'].includes(p.symbol))
                 .map((position, idx, arr) => {
                 const fund = fundamentals.get(position.symbol);
@@ -499,6 +501,36 @@ function AccountingPage() {
                 </td>
               </tr>
             )}
+            {/* Separator */}
+            {schwabAccounts.length > 0 && (
+              <tr className="account-separator"><td colSpan={16}></td></tr>
+            )}
+            {/* Schwab Roth + Traditional (live, below Robinhood) */}
+            {schwabAccounts
+              .filter((acct) => acct.label === 'Roth IRA' || acct.label === 'Traditional IRA')
+              .sort((a, b) => a.label === 'Roth IRA' ? -1 : 1)
+              .flatMap((acct) =>
+                acct.positions.map((pos) => (
+                  <tr key={`schwab-${acct.accountNumber}-${pos.symbol}`}>
+                    <td><span className={`account-badge account-badge--${acct.label === 'Roth IRA' ? 'roth' : 'traditional'}`}>{acct.label === 'Roth IRA' ? 'Roth' : 'Traditional'}</span></td>
+                    <td className="symbol">{pos.symbol.split(/\s+/)[0]}</td>
+                    <td className="numeric">100.0%</td>
+                    <td className="numeric">{pos.quantity.toFixed(4)}</td>
+                    <td className="numeric">{formatCurrency(pos.costBasis)}</td>
+                    <td className="numeric">{formatCurrency(pos.marketValue)}</td>
+                    <td className={`numeric ${pos.unrealizedGL >= 0 ? 'positive' : 'negative'}`}>{formatCurrency(pos.unrealizedGL)}</td>
+                    <td className="numeric">—</td>
+                    <td className="numeric">—</td>
+                    <td className="numeric">—</td>
+                    <td className={`numeric ${pos.unrealizedGLPct >= 0 ? 'positive' : 'negative'}`}>{pos.unrealizedGLPct.toFixed(1)}%</td>
+                    <td className="numeric">—</td>
+                    <td className="numeric">—</td>
+                    <td className="numeric">—</td>
+                    <td className="numeric">—</td>
+                    <td>—</td>
+                  </tr>
+                ))
+              )}
           </tbody>
         </table>
       </div>
