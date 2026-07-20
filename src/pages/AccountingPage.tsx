@@ -43,6 +43,20 @@ const ROTH_ACCOUNT_ID = 'v22i77x6vd97w8w';
 const TRAD_ACCOUNT_ID = '69o8emiuvma4ty9';
 const IRA_ACCOUNT_IDS = [ROTH_ACCOUNT_ID, TRAD_ACCOUNT_ID];
 
+/** Actual Robinhood shares (overrides PocketBase FIFO calculations) */
+const ROBINHOOD_ACTUAL_SHARES: Record<string, { shares: number; avgCost: number }> = {
+  ADM: { shares: 41.583972, avgCost: 60.58 },
+  HRL: { shares: 110.27033, avgCost: 31.40 },
+  KMB: { shares: 24.151617, avgCost: 115.65 },
+  KO: { shares: 5.879726, avgCost: 64.16 },
+  MCD: { shares: 12.751661, avgCost: 258.42 },
+  NEE: { shares: 1.895446, avgCost: 74.08 },
+  SWK: { shares: 1, avgCost: 92.15 },
+  TGT: { shares: 10, avgCost: 130.99 },
+  VGT: { shares: 433.4432, avgCost: 70.67 },
+  NASA: { shares: 100, avgCost: 37.00 },
+};
+
 /** Format a number as USD currency string */
 function formatCurrency(value: number): string {
   return value.toLocaleString('en-US', {
@@ -451,9 +465,9 @@ function AccountingPage() {
                       {weight != null ? `${weight.toFixed(1)}%` : '—'}
                     </td>
                     <td className="numeric">
-                      {position.shares.toLocaleString('en-US', { maximumFractionDigits: 4 })}
+                      {(ROBINHOOD_ACTUAL_SHARES[position.symbol]?.shares ?? position.shares).toLocaleString('en-US', { maximumFractionDigits: 4 })}
                     </td>
-                    <td className="numeric">{formatCurrency(position.cost_basis)}</td>
+                    <td className="numeric">{formatCurrency(ROBINHOOD_ACTUAL_SHARES[position.symbol] ? ROBINHOOD_ACTUAL_SHARES[position.symbol].shares * ROBINHOOD_ACTUAL_SHARES[position.symbol].avgCost : position.cost_basis)}</td>
                     <td className={`numeric ${position.market_value == null ? 'na' : ''}`}>
                       {position.market_value != null
                         ? formatCurrency(position.market_value)

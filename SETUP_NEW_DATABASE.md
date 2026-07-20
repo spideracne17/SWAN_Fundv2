@@ -45,6 +45,9 @@ My CURRENT Robinhood holdings (as of July 2026):
 - VGT: 433.4432 shares, avg cost $70.67
 - NASA: 100 shares, avg cost $37.00
 
+These numbers are HARDCODED in AccountingPage.tsx as ROBINHOOD_ACTUAL_SHARES.
+If holdings change, update that constant directly — do NOT rely on PocketBase FIFO math.
+
 Schwab accounts (live from API, don't touch):
 - Roth: VGT 1683.305 shares
 - Traditional: VGT 1280.2673 shares  
