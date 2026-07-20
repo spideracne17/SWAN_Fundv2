@@ -405,7 +405,9 @@ function AccountingPage() {
           </thead>
           <tbody>
             {accountingData && accountingData.positions.length > 0 ? (
-              accountingData.positions.map((position, idx, arr) => {
+              accountingData.positions
+                .filter(p => !['SLVO', 'EV', 'T1', 'TSLA'].includes(p.symbol))
+                .map((position, idx, arr) => {
                 const fund = fundamentals.get(position.symbol);
                 const currentPrice = prices.get(position.symbol);
 
