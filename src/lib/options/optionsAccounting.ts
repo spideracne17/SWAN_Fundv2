@@ -122,7 +122,7 @@ function transactionToLeg(tx: CashTransactionRecord): OptionLeg | null {
     id: tx.id,
     date: tx.transaction_date,
     action,
-    contracts: 1, // Schwab lists each contract as separate transaction rows; we group later
+    contracts: Math.abs(parseFloat(String(tx.quantity)) || 1),
     underlying: parsed.underlying,
     expiration: parsed.expiration,
     strike: parsed.strike,
@@ -162,15 +162,12 @@ function pairIntoSpreads(legs: OptionLeg[]): SpreadTrade[] {
     );
 
     if (bto) {
-      // It's a credit spread
-      // For puts: short leg = higher strike, long leg = lower strike
+      const contractCount = sto.contracts; // Use actual quantity from CSV
       const shortStrike = Math.max(sto.strike, bto.strike);
       const longStrike = Math.min(sto.strike, bto.strike);
       const spreadWidth = shortStrike - longStrike;
-
-      // Net credit = STO amount (positive) + BTO amount (negative)
       const netCredit = sto.amount + bto.amount;
-      const maxLoss = spreadWidth * 100; // 1 contract, $100 multiplier
+      const maxLoss = spreadWidth * 100 * contractCount;
 
       spreads.push({
         id: `${sto.id}_${bto.id}`,
@@ -181,9 +178,9 @@ function pairIntoSpreads(legs: OptionLeg[]): SpreadTrade[] {
         shortStrike,
         longStrike,
         optionType: sto.optionType,
-        contracts: 1,
+        contracts: contractCount,
         spreadWidth,
-        premiumReceived: netCredit, // already net (positive = credit received)
+        premiumReceived: netCredit,
         premiumPaidToClose: 0,
         maxLoss,
         collateral: maxLoss,

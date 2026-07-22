@@ -78,4 +78,9 @@ Then import your 4 CSV files in this order:
 3. Schwab Traditional IRA
 4. Schwab Spreads
 
+After importing Schwab Spreads, run the dedup script (spreads gets double-imported due to how Schwab exports):
+```powershell
+$env:Path = "C:\Program Files\nodejs;" + $env:Path; node schwab/dedup-spreads.mjs
+```
+
 Then tell Kiro: "Apply the VGT 8:1 stock split to all VGT tax lots in PocketBase"

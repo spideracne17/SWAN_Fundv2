@@ -30,7 +30,7 @@ interface SchwabSpread {
 }
 
 const SPREAD_WIDTH_DOLLARS = 500; // 5-point spread × $100 multiplier
-const SCHWAB_SPREADS_ACCOUNT_ID = '7oq9h56iacbrxj3';
+const SCHWAB_SPREADS_ACCOUNT_ID = '562upqkz5ba4e16';
 
 /* ─── Helpers ──────────────────────────────────────────────────────────── */
 
@@ -360,12 +360,13 @@ function TraderPage() {
                   <th>Symbol</th>
                   <th>Type</th>
                   <th>Opened</th>
-                  <th>DTE</th>
                   <th>Closed / Exp</th>
+                  <th>Contracts</th>
                   <th>Potential Profit</th>
                   <th>Actual Profit</th>
                   <th>Money at Risk</th>
                   <th>% of Total</th>
+                  <th>DTE</th>
                   <th>Days Held</th>
                   <th>$/Day</th>
                   <th>Status</th>
@@ -438,12 +439,13 @@ function ClosedPositionRow({ position }: { position: SpreadTrade }) {
       <td className="symbol-cell">{position.underlying}</td>
       <td>{position.optionType === 'P' ? 'Put' : 'Call'}</td>
       <td>{formatDateStr(position.openDate)}</td>
-      <td>{dte}</td>
       <td>{position.closeDate ? formatDateStr(position.closeDate) : '—'}</td>
+      <td>{position.contracts ?? 1}</td>
       <td className="pnl--positive">{formatCurrencyDecimal(potentialProfit)}</td>
       <td className={getPnLClass(actualProfit)}>{formatCurrencyDecimal(actualProfit)}</td>
       <td>{formatCurrency(moneyAtRisk)}</td>
       <td className={getPnLClass(pctOfTotal)}>{pctOfTotal.toFixed(0)}%</td>
+      <td>{dte}</td>
       <td>{daysHeld}</td>
       <td className={getPnLClass(moneyPerDay)}>{formatCurrencyDecimal(moneyPerDay)}</td>
       <td>
