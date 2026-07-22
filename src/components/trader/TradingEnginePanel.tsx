@@ -424,6 +424,10 @@ export default function TradingEnginePanel({ accountValue, optionsData, liveOpen
           <h4>Capital Efficiency & Performance</h4>
           <div className="engine-efficiency-grid">
             <div className="engine-eff-item">
+              <span className="engine-eff-label">Total Trades</span>
+              <span className="engine-eff-value">{optionsData?.totalTrades ?? 0}</span>
+            </div>
+            <div className="engine-eff-item">
               <span className="engine-eff-label">Expired</span>
               <span className="engine-eff-value">{optionsData?.expiredPositions.length ?? 0}</span>
             </div>
@@ -432,12 +436,8 @@ export default function TradingEnginePanel({ accountValue, optionsData, liveOpen
               <span className="engine-eff-value">{optionsData?.closedPositions.length ?? 0}</span>
             </div>
             <div className="engine-eff-item">
-              <span className="engine-eff-label">Assigned</span>
-              <span className="engine-eff-value">{optionsData?.openPositions.filter(p => p.status === 'assigned').length ?? 0}</span>
-            </div>
-            <div className="engine-eff-item">
-              <span className="engine-eff-label">Lost</span>
-              <span className="engine-eff-value">{optionsData ? [...optionsData.closedPositions, ...optionsData.expiredPositions].filter(p => (p.realizedPnL ?? 0) < 0).length : 0}</span>
+              <span className="engine-eff-label">Assigned/Lost</span>
+              <span className="engine-eff-value">{(optionsData?.openPositions.filter(p => p.status === 'assigned').length ?? 0) + (optionsData ? [...optionsData.closedPositions, ...optionsData.expiredPositions].filter(p => (p.realizedPnL ?? 0) < 0).length : 0)}</span>
             </div>
             <div className="engine-eff-item">
               <span className="engine-eff-label">Open</span>
@@ -448,24 +448,16 @@ export default function TradingEnginePanel({ accountValue, optionsData, liveOpen
               <span className="engine-eff-value">{optionsData && optionsData.winRate > 0 ? `${optionsData.winRate.toFixed(0)}%` : '—'}</span>
             </div>
             <div className="engine-eff-item">
-              <span className="engine-eff-label">Total Trades</span>
-              <span className="engine-eff-value">{optionsData?.totalTrades ?? 0}</span>
-            </div>
-            <div className="engine-eff-item">
               <span className="engine-eff-label">Avg Days Held</span>
               <span className="engine-eff-value">{slotMetrics.avgDaysCapitalCommitted > 0 ? `${slotMetrics.avgDaysCapitalCommitted.toFixed(0)}` : '—'}</span>
-            </div>
-            <div className="engine-eff-item">
-              <span className="engine-eff-label">Slot Turnover</span>
-              <span className="engine-eff-value">{slotMetrics.avgSlotTurnover > 0 ? `${slotMetrics.avgSlotTurnover.toFixed(1)}x/yr` : '—'}</span>
             </div>
             <div className="engine-eff-item">
               <span className="engine-eff-label">Return/Slot/Year</span>
               <span className="engine-eff-value">{slotMetrics.avgAnnualSlotYield !== 0 ? `${slotMetrics.avgAnnualSlotYield.toFixed(1)}%` : '—'}</span>
             </div>
             <div className="engine-eff-item">
-              <span className="engine-eff-label">12M Profit</span>
-              <span className="engine-eff-value engine-eff-value--green">{fmtDec(slotMetrics.trailing12mProfit)}</span>
+              <span className="engine-eff-label">Slot Turnover</span>
+              <span className="engine-eff-value">{slotMetrics.avgSlotTurnover > 0 ? `${slotMetrics.avgSlotTurnover.toFixed(1)}x/yr` : '—'}</span>
             </div>
           </div>
         </div>

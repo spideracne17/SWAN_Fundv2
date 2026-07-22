@@ -292,23 +292,34 @@ function AccountingPage() {
       setAccountingData(enrichedAccounting);
       setRealizedGL(realized);
 
-      // Calculate net worth by summing market values per account type
-      const rothPositions = enrichedAccounting.positions.filter(p => p.account_id === 'vlubeg30nl05mm9');
-      const tradPositions = enrichedAccounting.positions.filter(p => p.account_id === 'ncyrg5kkqts2e0r');
-      const taxablePositions = enrichedAccounting.positions.filter(p => p.account_id === 'pd64pe7tiyvwro8' || p.account_id === '7oq9h56iacbrxj3');
+      // Calculate net worth — read from localStorage cache (set during Schwab fetch above)
+      let rothValue = 0;
+      let tradValue = 0;
+      try {
+        const cached = localStorage.getItem('schwab_portfolio_cache');
+        if (cached) {
+          const { accounts } = JSON.parse(cached);
+          rothValue = accounts.find((a: { label: string; totalValue: number }) => a.label === 'Roth IRA')?.totalValue ?? 0;
+          tradValue = accounts.find((a: { label: string; totalValue: number }) => a.label === 'Traditional IRA')?.totalValue ?? 0;
+        }
+      } catch { /* ignore */ }
 
-      const rothValue = rothPositions.reduce((sum, p) => sum + (p.market_value ?? p.cost_basis), 0);
-      const tradValue = tradPositions.reduce((sum, p) => sum + (p.market_value ?? p.cost_basis), 0);
-      const taxableValue = taxablePositions.reduce((sum, p) => sum + (p.market_value ?? p.cost_basis), 0);
-      const taxableUnrealizedGains = taxablePositions.reduce((sum, p) => sum + (p.unrealized_gain_loss ?? 0), 0);
+      // Taxable = Robinhood — use hardcoded actual values for accuracy
+      const robinhoodMarketValue = Object.entries(ROBINHOOD_ACTUAL_SHARES).reduce((sum, [symbol, data]) => {
+        const livePrice = prices.get(symbol);
+        return sum + (livePrice ? data.shares * livePrice : data.shares * data.avgCost);
+      }, 0);
+      const robinhoodCostBasis = Object.values(ROBINHOOD_ACTUAL_SHARES).reduce((sum, data) => sum + data.shares * data.avgCost, 0);
+      const taxableValue = robinhoodMarketValue;
+      const taxableUnrealizedGains = robinhoodMarketValue - robinhoodCostBasis;
 
       const nw = calculateNetWorth({
         rothValue,
         traditionalValue: tradValue,
         taxableValue,
         taxableUnrealizedGains,
-        marginalRate: 0.24, // MFJ 24% bracket ($201,051–$383,900)
-        longTermRate: 0.15, // MFJ 15% LTCG ($96,701–$600,050)
+        marginalRate: 0.24,
+        longTermRate: 0.15,
       });
 
       setNetWorth(nw);
