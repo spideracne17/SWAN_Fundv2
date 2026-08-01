@@ -73,7 +73,7 @@ async function serveTokenFile(
         });
         if (resp.ok) {
           const data = await resp.json();
-          tokens = { access_token: data.access_token, refresh_token: data.refresh_token ?? tokens.refresh_token, token_type: data.token_type, expires_in: data.expires_in, scope: data.scope ?? tokens.scope, obtained_at: Date.now(), expires_at: Date.now() + (data.expires_in * 1000) };
+          tokens = { access_token: (data as Record<string,unknown>).access_token as string, refresh_token: ((data as Record<string,unknown>).refresh_token as string) ?? tokens.refresh_token, token_type: (data as Record<string,unknown>).token_type as string, expires_in: (data as Record<string,unknown>).expires_in as number, scope: ((data as Record<string,unknown>).scope as string) ?? tokens.scope, obtained_at: Date.now(), expires_at: Date.now() + ((data as Record<string,unknown>).expires_in as number * 1000) };
           fs.writeFileSync(tokensPath, JSON.stringify(tokens, null, 2));
           console.log(`[schwab] Token refreshed for ${path.basename(tokensPath)}`);
         }

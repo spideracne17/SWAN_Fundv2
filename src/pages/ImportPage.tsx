@@ -10,7 +10,6 @@ import { validateAndDeduplicate, computeFileHash } from '@/lib/import/deduplicat
 import { importRecords, type ImportSummary as ImportSummaryData } from '@/lib/import/importRecords';
 import { generateBackup } from '@/lib/import/backup';
 import { useInvalidateOnImport } from '@/hooks/useInvalidateOnImport';
-import { getValidToken } from '@/lib/schwab/tokenManager';
 import pb from '@/lib/pocketbase';
 
 interface Account {

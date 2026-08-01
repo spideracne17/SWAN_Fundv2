@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect, useCallback } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { TARGET_PORTFOLIO, DIVIDEND_SETTINGS } from '@/lib/dividendEngine/sampleData';
 import { loadLocalSettings } from '@/lib/dividendEngine/localSettings';
@@ -244,7 +244,7 @@ function DeployTab({ scoredStocks, deployAmount, setDeployAmount }: {
 }) {
   const groupIncome: Record<string, number> = { A: 0, B: 0, C: 0 };
   for (const { stock } of scoredStocks) {
-    groupIncome[stock.calendarGroup] += stock.sharesHeld * stock.annualDividendPerShare;
+    groupIncome[stock.calendarGroup]! += stock.sharesHeld * stock.annualDividendPerShare;
   }
   const weakestGroup = Object.entries(groupIncome).sort((a, b) => a[1] - b[1])[0]?.[0] ?? 'A';
 

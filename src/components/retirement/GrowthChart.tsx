@@ -29,7 +29,6 @@ interface GrowthChartProps {
 
 // 2025 401k limits: $23,500 + $7,500 catch-up (age 50+) = $31,000
 // Plus employer match assumption
-const FOUR01K_ANNUAL = 31000; // catch-up eligible
 const FOUR01K_WITH_MATCH = 40000; // assume ~$9k employer match
 
 interface DataPoint {
@@ -140,9 +139,9 @@ export default function GrowthChart({
             width={55}
           />
           <Tooltip
-            formatter={(value: number | null, name: string) => {
+            formatter={(value: unknown, name: string) => {
               if (value === null) return ['—', name];
-              return [formatDollar(value), name];
+              return [formatDollar(value as number), name];
             }}
             labelFormatter={(label) => `${label}`}
             contentStyle={{ backgroundColor: '#1a1a2e', border: '1px solid #444', borderRadius: 6, fontSize: 12 }}

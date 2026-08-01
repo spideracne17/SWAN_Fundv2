@@ -37,10 +37,6 @@ function fmt(n: number): string {
   return n.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 });
 }
 
-function fmtDec(n: number): string {
-  return n.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
-
 function fmtPrice(n: number): string {
   return n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
@@ -500,7 +496,7 @@ export default function TradingEnginePanel({ accountValue, optionsData, liveOpen
                 </div>
                 <div className="engine-vbar-chart">
                   <div className="engine-vbar-bars">
-                    {months.map((monthLabel, monthIdx) => {
+                    {months.map((_monthLabel, monthIdx) => {
                       const monthNum = monthIdx + 1;
                       const data = monthGroups.get(monthNum) ?? [];
                       return (

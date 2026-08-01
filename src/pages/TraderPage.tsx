@@ -29,7 +29,6 @@ interface SchwabSpread {
   dte: number;
 }
 
-const SPREAD_WIDTH_DOLLARS = 500; // 5-point spread × $100 multiplier
 const SCHWAB_SPREADS_ACCOUNT_ID = '562upqkz5ba4e16';
 
 /* ─── Helpers ──────────────────────────────────────────────────────────── */
@@ -137,8 +136,8 @@ function TraderPage() {
                   const shortMatch = shortSym.match(/(\d{6})([PC])(\d+)/);
                   if (!shortMatch) continue;
 
-                  const expStr = shortMatch[1]; // YYMMDD
-                  const shortStrike = parseInt(shortMatch[3]) / 1000;
+                  const expStr = shortMatch[1]!; // YYMMDD
+                  const shortStrike = parseInt(shortMatch[3]!) / 1000;
 
                   // Find matching long leg (same expiry, nearby strike)
                   const longLeg = longs.find((l: { instrument: { symbol: string } }) => {
@@ -148,7 +147,7 @@ function TraderPage() {
 
                   const longSym = longLeg?.instrument?.symbol ?? '';
                   const longMatch = longSym.match(/(\d{6})([PC])(\d+)/);
-                  const longStrike = longMatch ? parseInt(longMatch[3]) / 1000 : shortStrike - 5;
+                  const longStrike = longMatch ? parseInt(longMatch[3]!) / 1000 : shortStrike - 5;
 
                   const exp = `20${expStr.slice(0,2)}-${expStr.slice(2,4)}-${expStr.slice(4,6)}`;
                   const dte = Math.round((new Date(exp + 'T16:00:00').getTime() - Date.now()) / (1000 * 60 * 60 * 24));

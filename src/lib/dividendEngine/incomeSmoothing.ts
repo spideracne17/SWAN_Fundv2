@@ -79,7 +79,7 @@ export function calculateIncomeSmoothing(
 
     const perPayment = annualDividend / 4;
     for (const m of months) {
-      monthlyProjected[m - 1] += perPayment;
+      monthlyProjected[m - 1]! += perPayment;
     }
   }
 

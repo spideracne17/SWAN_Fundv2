@@ -6,11 +6,11 @@
 
 export {
   fetchAccountingData,
-  fetchRealizedGainLossYTD,
+  fetchRealizedGainLoss,
   applyMarketPrices,
   type AccountingDashboardData,
   type PositionSummary,
-  type RealizedGainLossYTD,
+  type RealizedGainLoss,
 } from './accounting';
 
 export {

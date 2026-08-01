@@ -12,7 +12,7 @@
  */
 
 import { getValidToken } from './tokenManager';
-import { getAllAccountsWithPositions, getQuotes, type SchwabAccountDetails, type SchwabQuote, SchwabApiError } from './client';
+import { getQuotes, type SchwabAccountDetails } from './client';
 import { fetchStockPrices } from '@/lib/market/fetchStockPrices';
 import { loadLocalSettings } from '@/lib/dividendEngine/localSettings';
 

@@ -30,7 +30,7 @@ export interface PositionContext {
  * and returns the single correct action.
  */
 export function evaluatePositionDecision(ctx: PositionContext): PositionDecision {
-  const { dteRemaining, dropSizePct, marketCondition, shortDelta, dropDurationWeeks, isVixElevated3Weeks } = ctx;
+  const { dteRemaining, dropSizePct, marketCondition, shortDelta: _shortDelta, dropDurationWeeks, isVixElevated3Weeks } = ctx;
 
   // Rule 1: Black condition — close everything immediately
   if (marketCondition === 'BLACK') {

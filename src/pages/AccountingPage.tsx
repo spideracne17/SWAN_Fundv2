@@ -180,7 +180,7 @@ function AccountingPage() {
   const [fundamentals, setFundamentals] = useState<Map<string, StockFundamentals>>(new Map());
   const [prices, setPrices] = useState<Map<string, number>>(new Map());
   const [schwabAccounts, setSchwabAccounts] = useState<SchwabAccountSummary[]>([]);
-  const [schwabTotalValue, setSchwabTotalValue] = useState<number>(0);
+  const [_schwabTotalValue, setSchwabTotalValue] = useState<number>(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -478,7 +478,7 @@ function AccountingPage() {
                     <td className="numeric">
                       {(ROBINHOOD_ACTUAL_SHARES[position.symbol]?.shares ?? position.shares).toLocaleString('en-US', { maximumFractionDigits: 4 })}
                     </td>
-                    <td className="numeric">{formatCurrency(ROBINHOOD_ACTUAL_SHARES[position.symbol] ? ROBINHOOD_ACTUAL_SHARES[position.symbol].shares * ROBINHOOD_ACTUAL_SHARES[position.symbol].avgCost : position.cost_basis)}</td>
+                    <td className="numeric">{formatCurrency(ROBINHOOD_ACTUAL_SHARES[position.symbol] ? ROBINHOOD_ACTUAL_SHARES[position.symbol]!.shares * ROBINHOOD_ACTUAL_SHARES[position.symbol]!.avgCost : position.cost_basis)}</td>
                     <td className={`numeric ${position.market_value == null ? 'na' : ''}`}>
                       {position.market_value != null
                         ? formatCurrency(position.market_value)
@@ -533,7 +533,7 @@ function AccountingPage() {
             {/* Schwab Roth + Traditional (live, below Robinhood) */}
             {schwabAccounts
               .filter((acct) => acct.label === 'Roth IRA' || acct.label === 'Traditional IRA')
-              .sort((a, b) => a.label === 'Roth IRA' ? -1 : 1)
+              .sort((a, _b) => a.label === 'Roth IRA' ? -1 : 1)
               .flatMap((acct) =>
                 acct.positions.map((pos) => (
                   <tr key={`schwab-${acct.accountNumber}-${pos.symbol}`}>
