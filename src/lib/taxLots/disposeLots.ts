@@ -1,3 +1,4 @@
+import { generateId } from '@/lib/uuid';
 import { differenceInDays } from 'date-fns';
 import type { DispositionRecord, HoldingPeriod, TaxLotRecord } from '@/types/database';
 
@@ -72,7 +73,7 @@ export function disposeLotsFIFO(
     const now = new Date().toISOString();
 
     const disposition: DispositionRecord = {
-      id: crypto.randomUUID(),
+      id: generateId(),
       lot_id: lot.id,
       disposition_date: sale.date,
       shares_disposed: disposedQty,

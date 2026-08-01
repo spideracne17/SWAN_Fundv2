@@ -1,3 +1,4 @@
+import { generateId } from '@/lib/uuid';
 /**
  * Roll Chain Management
  *
@@ -66,7 +67,7 @@ export function detectRollChains(
         const chainId =
           closed.roll_chain_id ??
           opened.roll_chain_id ??
-          crypto.randomUUID();
+          generateId();
 
         // Assign the chain ID to both positions
         closed.roll_chain_id = chainId;

@@ -1,3 +1,4 @@
+import { generateId } from '@/lib/uuid';
 import type { AcquisitionType, LotStatus, TaxLotRecord } from '@/types/database';
 
 /**
@@ -57,7 +58,7 @@ export function createLot(purchase: PurchaseRecord): TaxLotRecord {
   const now = new Date().toISOString();
 
   const lot: TaxLotRecord = {
-    id: crypto.randomUUID(),
+    id: generateId(),
     account_id: purchase.account_id,
     symbol: purchase.symbol,
     acquisition_date: purchase.acquisition_date,
@@ -115,7 +116,7 @@ export function createTransferInLot(transfer: TransferInRecord): TaxLotRecord {
   const now = new Date().toISOString();
 
   const lot: TaxLotRecord = {
-    id: crypto.randomUUID(),
+    id: generateId(),
     account_id: transfer.account_id,
     symbol: transfer.symbol,
     acquisition_date: transfer.acquisition_date,
